@@ -1,5 +1,6 @@
 package greendream.cultivatech.platform.shared.interfaces.rest;
 
+import greendream.cultivatech.platform.shared.domain.exceptions.ConflictException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -44,7 +45,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorResponse handleException(MethodArgumentNotValidException exception, Locale locale) {
-        String prefix = messageSource.getMessage("errors.found", null, locale);
+        String prefix = messageSource.getMessage("errors.found", null, "Validation failed", locale);
         String fields = exception.getFieldErrors().stream()
                 .map(fieldError -> messageSource.getMessage(fieldError, locale))
                 .collect(Collectors.joining(", "));
@@ -70,6 +71,29 @@ public class GlobalExceptionHandler {
         String message = Objects.requireNonNullElse(messageSource.getMessage(messageKey, null, messageKey, locale), messageKey);
         log.warn("Illegal argument: {}", message);
         return ErrorResponse.create(exception, HttpStatusCode.valueOf(HttpStatus.BAD_REQUEST.value()), message);
+    }
+
+    /**
+     * Handles {@link ConflictException}.
+     *
+     * @param exception The {@link ConflictException} exception to handle
+     * @param locale    The {@link Locale} locale to use for error messages
+     * @return The {@link ErrorResponse} error response
+     */
+    @ExceptionHandler(ConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    ErrorResponse handleException(ConflictException exception, Locale locale) {
+        String messageKey = exception.getMessage() != null ? exception.getMessage() : "errors.conflict";
+        String message = Objects.requireNonNullElse(
+                messageSource.getMessage(messageKey, null, messageKey, locale),
+                messageKey
+        );
+        log.warn("Conflict: {}", message);
+        return ErrorResponse.create(
+                exception,
+                HttpStatusCode.valueOf(HttpStatus.CONFLICT.value()),
+                message
+        );
     }
 
 }
