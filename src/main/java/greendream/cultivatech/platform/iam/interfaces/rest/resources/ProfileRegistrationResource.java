@@ -1,14 +1,12 @@
 package greendream.cultivatech.platform.iam.interfaces.rest.resources;
 
-import java.util.Set;
-
 /**
- * Temporary HTTP profile payload returned by sign-up.
+ * HTTP profile payload returned by sign-up.
  */
-public record TemporaryProfileResource(
+public record ProfileRegistrationResource(
         String fundoName,
         String contactPhone,
         double moistureThreshold,
-        double tempThreshold
+        double temperatureThreshold
 ) {
 }

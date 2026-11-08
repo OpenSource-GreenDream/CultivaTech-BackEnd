@@ -1,7 +1,7 @@
 package greendream.cultivatech.platform.iam.interfaces.rest.transform;
 
 import greendream.cultivatech.platform.iam.application.results.SignUpResult;
-import greendream.cultivatech.platform.iam.interfaces.rest.resources.TemporaryProfileResource;
+import greendream.cultivatech.platform.iam.interfaces.rest.resources.ProfileRegistrationResource;
 import greendream.cultivatech.platform.iam.interfaces.rest.resources.UserResource;
 import org.springframework.stereotype.Component;
 
@@ -16,11 +16,11 @@ public class UserResourceMapper {
                 result.userId(),
                 result.email(),
                 result.roles(),
-                new TemporaryProfileResource(
+                new ProfileRegistrationResource(
                         result.profile().fundoName(),
                         result.profile().contactPhone(),
                         result.profile().moistureThreshold(),
-                        result.profile().tempThreshold()
+                        result.profile().temperatureThreshold()
                 )
         );
     }

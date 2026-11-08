@@ -1,6 +1,7 @@
 package greendream.cultivatech.platform.shared.interfaces.rest;
 
 import greendream.cultivatech.platform.shared.domain.exceptions.ConflictException;
+import greendream.cultivatech.platform.shared.domain.exceptions.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -92,6 +93,29 @@ public class GlobalExceptionHandler {
         return ErrorResponse.create(
                 exception,
                 HttpStatusCode.valueOf(HttpStatus.CONFLICT.value()),
+                message
+        );
+    }
+
+    /**
+     * Handles {@link NotFoundException}.
+     *
+     * @param exception The {@link NotFoundException} exception to handle
+     * @param locale    The {@link Locale} locale to use for error messages
+     * @return The {@link ErrorResponse} error response
+     */
+    @ExceptionHandler(NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    ErrorResponse handleException(NotFoundException exception, Locale locale) {
+        String messageKey = exception.getMessage() != null ? exception.getMessage() : "errors.not-found";
+        String message = Objects.requireNonNullElse(
+                messageSource.getMessage(messageKey, null, messageKey, locale),
+                messageKey
+        );
+        log.warn("Not found: {}", message);
+        return ErrorResponse.create(
+                exception,
+                HttpStatusCode.valueOf(HttpStatus.NOT_FOUND.value()),
                 message
         );
     }
