@@ -55,11 +55,6 @@ public class AuthenticationCommandService {
     /**
      * Registers a user, assigns the default FARMER role and registers the
      * user's profile through the Profile anti-corruption port.
-     *
-     * <p>The user, its role assignment, the profile and the audit data are written
-     * in a single transaction. If profile registration fails, the transaction is
-     * marked for rollback.</p>
-     *
      * @param command sign-up command
      * @return successful sign-up result or an application error
      */
