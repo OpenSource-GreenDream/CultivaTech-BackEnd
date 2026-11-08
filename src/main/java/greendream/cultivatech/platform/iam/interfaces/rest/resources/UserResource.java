@@ -9,6 +9,6 @@ public record UserResource(
         Long id,
         String email,
         Set<String> roles,
-        TemporaryProfileResource profile
+        ProfileRegistrationResource profile
 ) {
 }

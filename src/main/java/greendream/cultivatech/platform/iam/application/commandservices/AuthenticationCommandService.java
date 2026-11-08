@@ -1,9 +1,12 @@
 package greendream.cultivatech.platform.iam.application.commandservices;
 
+import greendream.cultivatech.platform.iam.application.commands.ProfileRegistrationCommand;
 import greendream.cultivatech.platform.iam.application.commands.SignUpCommand;
+import greendream.cultivatech.platform.iam.application.ports.ProfileRegistration;
+import greendream.cultivatech.platform.iam.application.results.ProfileRegistrationError;
+import greendream.cultivatech.platform.iam.application.results.ProfileRegistrationResult;
 import greendream.cultivatech.platform.iam.application.results.SignUpError;
 import greendream.cultivatech.platform.iam.application.results.SignUpResult;
-import greendream.cultivatech.platform.iam.application.results.TemporaryProfileResult;
 import greendream.cultivatech.platform.iam.domain.model.aggregates.Role;
 import greendream.cultivatech.platform.iam.domain.model.aggregates.User;
 import greendream.cultivatech.platform.iam.domain.model.valueobjects.EmailAddress;
@@ -16,6 +19,7 @@ import greendream.cultivatech.platform.iam.domain.repositories.UserRepository;
 import greendream.cultivatech.platform.shared.application.result.Result;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.util.Set;
 
@@ -28,27 +32,29 @@ public class AuthenticationCommandService {
     private static final RoleName DEFAULT_ROLE_NAME = new RoleName("FARMER");
     private static final int MIN_PASSWORD_LENGTH = 8;
     private static final int MAX_PASSWORD_LENGTH = 128;
+    private static final String DEFAULT_FUNDO_NAME = "Fundo Principal (Default)";
+    private static final String DEFAULT_CONTACT_PHONE = "+51000000000";
+    private static final double DEFAULT_MOISTURE_THRESHOLD = 30.0;
+    private static final double DEFAULT_TEMPERATURE_THRESHOLD = 25.0;
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordHashing passwordHashing;
+    private final ProfileRegistration profileRegistration;
 
     public AuthenticationCommandService(UserRepository userRepository,
                                         RoleRepository roleRepository,
-                                        PasswordHashing passwordHashing) {
+                                        PasswordHashing passwordHashing,
+                                        ProfileRegistration profileRegistration) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordHashing = passwordHashing;
+        this.profileRegistration = profileRegistration;
     }
 
     /**
-     * Registers a user, assigns the default FARMER role and returns the
-     * temporary application-layer profile payload.
-     *
-     * <p>The user, its role assignment and the audit data are written in a single
-     * transaction. Profile data is mocked locally because the Profile context does
-     * not exist yet.</p>
-     *
+     * Registers a user, assigns the default FARMER role and registers the
+     * user's profile through the Profile anti-corruption port.
      * @param command sign-up command
      * @return successful sign-up result or an application error
      */
@@ -90,19 +96,25 @@ public class AuthenticationCommandService {
             return Result.failure(new SignUpError("error.user.id.not-assigned"));
         }
 
-        // TODO: Replace hardcoded profile defaults with ProfileContext integration
-        TemporaryProfileResult profile = new TemporaryProfileResult(
-                "Fundo Principal (Default)",
-                "+51000000000",
-                30.0,
-                25.0
-        );
+        Result<ProfileRegistrationResult, ProfileRegistrationError> profileResult =
+                profileRegistration.register(new ProfileRegistrationCommand(
+                        userId,
+                        DEFAULT_FUNDO_NAME,
+                        DEFAULT_CONTACT_PHONE,
+                        DEFAULT_MOISTURE_THRESHOLD,
+                        DEFAULT_TEMPERATURE_THRESHOLD
+                ));
+
+        if (profileResult.isFailure()) {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return Result.failure(new SignUpError(profileResult.failure().orElseThrow().messageKey()));
+        }
 
         return Result.success(new SignUpResult(
                 userId,
                 savedUser.email().value(),
                 Set.of(defaultRole.name().value()),
-                profile
+                profileResult.success().orElseThrow()
         ));
     }
 
