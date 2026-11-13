@@ -10,6 +10,7 @@ import greendream.cultivatech.platform.profile.infrastructure.persistence.jpa.re
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -44,6 +45,35 @@ public class ProfileRepositoryAdapter implements ProfileRepository {
     public Optional<Profile> findById(ProfileId id) {
         return profileJpaRepository.findById(id.value())
                 .map(mapper::toDomain);
+    }
+
+    @Override
+    @Transactional
+    public Profile update(Profile profile) {
+        if (profile.id().isEmpty()) {
+            throw new IllegalArgumentException("error.profile.id.not-assigned");
+        }
+        return save(profile);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Profile> findAll() {
+        return profileJpaRepository.findAll().stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void deleteById(ProfileId id) {
+        profileJpaRepository.delete(findEntity(id));
+    }
+
+    @Override
+    @Transactional
+    public void deleteAll() {
+        profileJpaRepository.deleteAll();
     }
 
     @Override
