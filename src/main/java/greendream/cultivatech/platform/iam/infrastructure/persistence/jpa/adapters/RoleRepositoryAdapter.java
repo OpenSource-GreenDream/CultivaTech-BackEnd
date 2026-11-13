@@ -10,6 +10,7 @@ import greendream.cultivatech.platform.iam.infrastructure.persistence.jpa.reposi
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -42,6 +43,12 @@ public class RoleRepositoryAdapter implements RoleRepository {
     }
 
     @Override
+    @Transactional
+    public Role update(Role role) {
+        return save(role);
+    }
+
+    @Override
     public Optional<Role> findById(RoleId id) {
         return roleJpaRepository.findById(id.value()).map(mapper::toDomain);
     }
@@ -54,6 +61,28 @@ public class RoleRepositoryAdapter implements RoleRepository {
     @Override
     public boolean existsByName(RoleName name) {
         return roleJpaRepository.existsByName(name.value());
+    }
+
+    @Override
+    public List<Role> findAll() {
+        return roleJpaRepository.findAll().stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void deleteById(RoleId id) {
+        if (!roleJpaRepository.existsById(id.value())) {
+            throw new IllegalArgumentException("error.role.not-found");
+        }
+        roleJpaRepository.deleteById(id.value());
+    }
+
+    @Override
+    @Transactional
+    public void deleteAll() {
+        roleJpaRepository.deleteAll();
     }
 
     private RolePersistenceEntity findEntity(RoleId id) {
