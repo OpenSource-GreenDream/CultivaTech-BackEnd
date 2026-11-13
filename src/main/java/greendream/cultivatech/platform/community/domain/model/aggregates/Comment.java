@@ -1,6 +1,7 @@
 package greendream.cultivatech.platform.community.domain.model.aggregates;
 
 import greendream.cultivatech.platform.shared.domain.aggregates.AbstractDomainAggregateRoot;
+import java.util.Date;
 
 public class Comment extends AbstractDomainAggregateRoot<Comment> {
     private Long id;
@@ -11,6 +12,8 @@ public class Comment extends AbstractDomainAggregateRoot<Comment> {
     private final Long productId;
     private String content;
     private int rating;
+    private Date createdAt;
+    private Date updatedAt;
 
     public Comment(Long authorProfileId, String targetType, Long targetProfileId, Long fieldId,
                    Long productId, String content, int rating) {
@@ -31,9 +34,11 @@ public class Comment extends AbstractDomainAggregateRoot<Comment> {
         this.rating = rating;
     }
 
-    public static Comment restore(Long id, Long author, String type, Long target, Long field, Long product, String content, int rating) {
+    public static Comment restore(Long id, Long author, String type, Long target, Long field, Long product, String content, int rating, Date createdAt, Date updatedAt) {
         Comment comment = new Comment(author, type, target, field, product, content, rating);
         comment.id = id;
+        comment.createdAt = createdAt;
+        comment.updatedAt = updatedAt;
         return comment;
     }
 
@@ -52,4 +57,6 @@ public class Comment extends AbstractDomainAggregateRoot<Comment> {
     public Long getProductId() { return productId; }
     public String getContent() { return content; }
     public int getRating() { return rating; }
+    public Date getCreatedAt() { return createdAt; }
+    public Date getUpdatedAt() { return updatedAt; }
 }

@@ -30,6 +30,6 @@ public class CommunityProfileRepositoryAdapter implements CommunityProfileReposi
         e.setPublicBio(p.getPublicBio()); e.setVisibilityStatus(p.getVisibilityStatus()); return e;
     }
     private CommunityProfile toDomain(CommunityProfileEntity e) {
-        return CommunityProfile.restore(e.getId(), e.getProfileId(), e.getNickname(), e.getReputationScore(), e.getPublicBio(), e.getVisibilityStatus());
+        return CommunityProfile.restore(e.getId(), e.getProfileId(), e.getNickname(), e.getReputationScore(), e.getPublicBio(), e.getVisibilityStatus(), e.getCreatedAt(), e.getUpdatedAt());
     }
 }

@@ -65,13 +65,14 @@ public class CommunityController {
     public record UpdateCommentRequest(@NotBlank @Size(max=1000) String content, @NotNull Integer rating) { }
     public record ProfileResource(Long id, @JsonProperty("profile_id") Long profileId, String nickname,
             @JsonProperty("reputation_score") int reputationScore, @JsonProperty("public_bio") String publicBio,
-            @JsonProperty("visibility_status") int visibilityStatus) {
-        static ProfileResource from(CommunityProfile p) { return new ProfileResource(p.getId(), p.getProfileId(), p.getNickname(), p.getReputationScore(), p.getPublicBio(), p.getVisibilityStatus()); }
+            @JsonProperty("visibility_status") int visibilityStatus,
+            @JsonProperty("created_at") Date createdAt, @JsonProperty("updated_at") Date updatedAt) {
+        static ProfileResource from(CommunityProfile p) { return new ProfileResource(p.getId(), p.getProfileId(), p.getNickname(), p.getReputationScore(), p.getPublicBio(), p.getVisibilityStatus(), p.getCreatedAt(), p.getUpdatedAt()); }
     }
     public record CommentResource(Long id, @JsonProperty("author_profile_id") Long authorProfileId,
             @JsonProperty("target_type") String targetType, @JsonProperty("target_profile_id") Long targetProfileId,
             @JsonProperty("field_id") Long fieldId, @JsonProperty("product_id") Long productId, String content, int rating,
             @JsonProperty("created_at") Date createdAt, @JsonProperty("updated_at") Date updatedAt) {
-        static CommentResource from(Comment c) { return new CommentResource(c.getId(), c.getAuthorProfileId(), c.getTargetType(), c.getTargetProfileId(), c.getFieldId(), c.getProductId(), c.getContent(), c.getRating(), null, null); }
+        static CommentResource from(Comment c) { return new CommentResource(c.getId(), c.getAuthorProfileId(), c.getTargetType(), c.getTargetProfileId(), c.getFieldId(), c.getProductId(), c.getContent(), c.getRating(), c.getCreatedAt(), c.getUpdatedAt()); }
     }
 }

@@ -30,6 +30,6 @@ public class CommentRepositoryAdapter implements CommentRepository {
         e.setContent(c.getContent()); e.setRating(c.getRating()); return e;
     }
     private Comment toDomain(CommentEntity e) {
-        return Comment.restore(e.getId(), e.getAuthorProfileId(), e.getTargetType(), e.getTargetProfileId(), e.getFieldId(), e.getProductId(), e.getContent(), e.getRating());
+        return Comment.restore(e.getId(), e.getAuthorProfileId(), e.getTargetType(), e.getTargetProfileId(), e.getFieldId(), e.getProductId(), e.getContent(), e.getRating(), e.getCreatedAt(), e.getUpdatedAt());
     }
 }
