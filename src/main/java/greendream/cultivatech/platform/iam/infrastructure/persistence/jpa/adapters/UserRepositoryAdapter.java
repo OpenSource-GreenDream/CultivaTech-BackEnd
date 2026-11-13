@@ -83,6 +83,11 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
+    public boolean existsByRoleId(RoleId roleId) {
+        return userJpaRepository.existsByRoles_Id(roleId.value());
+    }
+
+    @Override
     @Transactional
     public void deleteById(UserId id) {
         if (!userJpaRepository.existsById(id.value())) {

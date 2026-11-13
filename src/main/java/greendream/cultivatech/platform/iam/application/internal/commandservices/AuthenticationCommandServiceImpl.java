@@ -33,10 +33,10 @@ public class AuthenticationCommandServiceImpl implements AuthenticationCommandSe
     private static final RoleName DEFAULT_ROLE_NAME = new RoleName("FARMER");
     private static final int MIN_PASSWORD_LENGTH = 8;
     private static final int MAX_PASSWORD_LENGTH = 128;
-    private static final String DEFAULT_FUNDO_NAME = "Fundo Principal (Default)";
+    private static final String DEFAULT_FUNDO_NAME = "Default Fundo";
     private static final String DEFAULT_CONTACT_PHONE = "+51000000000";
-    private static final double DEFAULT_MOISTURE_THRESHOLD = 30.0;
-    private static final double DEFAULT_TEMPERATURE_THRESHOLD = 25.0;
+    private static final double DEFAULT_MOISTURE_THRESHOLD = 0.0;
+    private static final double DEFAULT_TEMPERATURE_THRESHOLD = 0.0;
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;

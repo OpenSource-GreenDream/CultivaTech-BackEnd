@@ -13,4 +13,6 @@ public interface UserJpaRepository extends JpaRepository<UserPersistenceEntity, 
     Optional<UserPersistenceEntity> findByEmailAddress(String emailAddress);
 
     boolean existsByEmailAddress(String emailAddress);
+
+    boolean existsByRoles_Id(Long roleId);
 }
