@@ -14,6 +14,7 @@ import greendream.cultivatech.platform.profile.interfaces.rest.transform.Profile
 import greendream.cultivatech.platform.shared.application.result.Result;
 import greendream.cultivatech.platform.shared.domain.exceptions.ConflictException;
 import greendream.cultivatech.platform.shared.domain.exceptions.NotFoundException;
+import greendream.cultivatech.platform.shared.infrastructure.security.CurrentUserAccess;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -41,13 +42,16 @@ public class ProfileController {
     private final ProfileCommandService profileCommandService;
     private final ProfileQueryService profileQueryService;
     private final ProfileResourceMapper profileResourceMapper;
+    private final CurrentUserAccess currentUserAccess;
 
     public ProfileController(ProfileCommandService profileCommandService,
                              ProfileQueryService profileQueryService,
-                             ProfileResourceMapper profileResourceMapper) {
+                             ProfileResourceMapper profileResourceMapper,
+                             CurrentUserAccess currentUserAccess) {
         this.profileCommandService = profileCommandService;
         this.profileQueryService = profileQueryService;
         this.profileResourceMapper = profileResourceMapper;
+        this.currentUserAccess = currentUserAccess;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -59,6 +63,8 @@ public class ProfileController {
     })
     public ResponseEntity<ProfileResource> register(@PathVariable("userId") Long userId,
                                                     @Valid @RequestBody RegisterProfileRequest request) {
+        currentUserAccess.requireSelfOrAdmin(userId);
+
         Result<ProfileResult, ProfileError> result = profileCommandService.register(
                 new RegisterProfileCommand(
                         userId,
@@ -86,6 +92,8 @@ public class ProfileController {
             @ApiResponse(responseCode = "404", description = "Profile not found")
     })
     public ResponseEntity<ProfileResource> getByUserId(@PathVariable("userId") Long userId) {
+        currentUserAccess.requireSelfOrAdmin(userId);
+
         Result<ProfileResult, ProfileError> result = profileQueryService.findByUserId(
                 new GetProfileByUserIdQuery(userId)
         );
@@ -107,6 +115,8 @@ public class ProfileController {
     })
     public ResponseEntity<ProfileResource> update(@PathVariable("userId") Long userId,
                                                   @Valid @RequestBody UpdateProfileRequest request) {
+        currentUserAccess.requireSelfOrAdmin(userId);
+
         Result<ProfileResult, ProfileError> result = profileCommandService.update(
                 new UpdateProfileCommand(
                         userId,
