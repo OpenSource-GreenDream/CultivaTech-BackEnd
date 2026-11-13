@@ -1,17 +1,22 @@
 package greendream.cultivatech.platform.iam.application.internal.commandservices;
 
 import greendream.cultivatech.platform.iam.application.commands.ProfileRegistrationCommand;
+import greendream.cultivatech.platform.iam.application.commands.SignInCommand;
 import greendream.cultivatech.platform.iam.application.commands.SignUpCommand;
 import greendream.cultivatech.platform.iam.application.commandservices.AuthenticationCommandService;
 import greendream.cultivatech.platform.iam.application.ports.ProfileRegistration;
+import greendream.cultivatech.platform.iam.application.ports.TokenIssuer;
 import greendream.cultivatech.platform.iam.application.results.ProfileRegistrationError;
 import greendream.cultivatech.platform.iam.application.results.ProfileRegistrationResult;
+import greendream.cultivatech.platform.iam.application.results.SignInError;
+import greendream.cultivatech.platform.iam.application.results.SignInResult;
 import greendream.cultivatech.platform.iam.application.results.SignUpError;
 import greendream.cultivatech.platform.iam.application.results.SignUpResult;
 import greendream.cultivatech.platform.iam.domain.model.aggregates.Role;
 import greendream.cultivatech.platform.iam.domain.model.aggregates.User;
 import greendream.cultivatech.platform.iam.domain.model.valueobjects.EmailAddress;
 import greendream.cultivatech.platform.iam.domain.model.valueobjects.PasswordHash;
+import greendream.cultivatech.platform.iam.domain.model.valueobjects.RoleId;
 import greendream.cultivatech.platform.iam.domain.model.valueobjects.RoleName;
 import greendream.cultivatech.platform.iam.domain.model.valueobjects.UserId;
 import greendream.cultivatech.platform.iam.domain.ports.PasswordHashing;
@@ -22,7 +27,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of AuthenticationCommandService.
@@ -38,19 +45,25 @@ public class AuthenticationCommandServiceImpl implements AuthenticationCommandSe
     private static final double DEFAULT_MOISTURE_THRESHOLD = 30.0;
     private static final double DEFAULT_TEMPERATURE_THRESHOLD = 25.0;
 
+    private static final String INVALID_CREDENTIALS = "error.authentication.invalid-credentials";
+    private static final String BEARER_TOKEN_TYPE = "Bearer";
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordHashing passwordHashing;
     private final ProfileRegistration profileRegistration;
+    private final TokenIssuer tokenIssuer;
 
     public AuthenticationCommandServiceImpl(UserRepository userRepository,
                                             RoleRepository roleRepository,
                                             PasswordHashing passwordHashing,
-                                            ProfileRegistration profileRegistration) {
+                                            ProfileRegistration profileRegistration,
+                                            TokenIssuer tokenIssuer) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordHashing = passwordHashing;
         this.profileRegistration = profileRegistration;
+        this.tokenIssuer = tokenIssuer;
     }
 
     @Override
@@ -112,6 +125,58 @@ public class AuthenticationCommandServiceImpl implements AuthenticationCommandSe
                 Set.of(defaultRole.name().value()),
                 profileResult.success().orElseThrow()
         ));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Result<SignInResult, SignInError> signIn(SignInCommand command) {
+        if (command == null) {
+            return Result.failure(new SignInError("error.command.required"));
+        }
+
+        EmailAddress email;
+        try {
+            email = new EmailAddress(command.email());
+        } catch (IllegalArgumentException exception) {
+            return Result.failure(new SignInError(exception.getMessage()));
+        }
+
+        if (command.password() == null || command.password().isBlank()) {
+            return Result.failure(new SignInError("error.user.password.required"));
+        }
+
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null
+                || !user.isActive()
+                || !passwordHashing.matches(command.password(), user.passwordHash())) {
+            return Result.failure(new SignInError(INVALID_CREDENTIALS));
+        }
+
+        UserId userId = user.id().orElse(null);
+        if (userId == null) {
+            return Result.failure(new SignInError("error.user.id.not-assigned"));
+        }
+
+        Set<String> roles = resolveRoleNames(user.roleIds());
+        TokenIssuer.IssuedToken issuedToken = tokenIssuer.issue(userId.value(), user.email().value(), roles);
+
+        return Result.success(new SignInResult(
+                issuedToken.accessToken(),
+                BEARER_TOKEN_TYPE,
+                issuedToken.expiresInSeconds(),
+                userId.value(),
+                user.email().value(),
+                roles
+        ));
+    }
+
+    private Set<String> resolveRoleNames(Set<RoleId> roleIds) {
+        return roleIds.stream()
+                .map(roleRepository::findById)
+                .flatMap(java.util.Optional::stream)
+                .map(Role::name)
+                .map(RoleName::value)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private Result<EmailAddress, SignUpError> parseEmail(String email) {
