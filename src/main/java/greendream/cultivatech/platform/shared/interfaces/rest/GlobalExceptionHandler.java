@@ -2,7 +2,6 @@ package greendream.cultivatech.platform.shared.interfaces.rest;
 
 import greendream.cultivatech.platform.shared.domain.exceptions.ConflictException;
 import greendream.cultivatech.platform.shared.domain.exceptions.NotFoundException;
-import greendream.cultivatech.platform.shared.domain.exceptions.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -117,29 +116,6 @@ public class GlobalExceptionHandler {
         return ErrorResponse.create(
                 exception,
                 HttpStatusCode.valueOf(HttpStatus.NOT_FOUND.value()),
-                message
-        );
-    }
-
-    /**
-     * Handles {@link UnauthorizedException}.
-     *
-     * @param exception The {@link UnauthorizedException} exception to handle
-     * @param locale    The {@link Locale} locale to use for error messages
-     * @return The {@link ErrorResponse} error response
-     */
-    @ExceptionHandler(UnauthorizedException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    ErrorResponse handleException(UnauthorizedException exception, Locale locale) {
-        String messageKey = exception.getMessage() != null ? exception.getMessage() : "error.authentication.unauthorized";
-        String message = Objects.requireNonNullElse(
-                messageSource.getMessage(messageKey, null, messageKey, locale),
-                messageKey
-        );
-        log.warn("Unauthorized: {}", message);
-        return ErrorResponse.create(
-                exception,
-                HttpStatusCode.valueOf(HttpStatus.UNAUTHORIZED.value()),
                 message
         );
     }

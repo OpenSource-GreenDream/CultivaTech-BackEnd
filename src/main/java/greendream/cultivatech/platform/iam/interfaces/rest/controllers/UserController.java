@@ -14,7 +14,6 @@ import greendream.cultivatech.platform.iam.interfaces.rest.transform.UserSummary
 import greendream.cultivatech.platform.shared.application.result.Result;
 import greendream.cultivatech.platform.shared.domain.exceptions.ConflictException;
 import greendream.cultivatech.platform.shared.domain.exceptions.NotFoundException;
-import greendream.cultivatech.platform.shared.infrastructure.security.CurrentUserAccess;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -44,24 +43,19 @@ public class UserController {
     private final UserQueryService userQueryService;
     private final UserCommandService userCommandService;
     private final UserSummaryResourceMapper userSummaryResourceMapper;
-    private final CurrentUserAccess currentUserAccess;
 
     public UserController(UserQueryService userQueryService,
                           UserCommandService userCommandService,
-                          UserSummaryResourceMapper userSummaryResourceMapper,
-                          CurrentUserAccess currentUserAccess) {
+                          UserSummaryResourceMapper userSummaryResourceMapper) {
         this.userQueryService = userQueryService;
         this.userCommandService = userCommandService;
         this.userSummaryResourceMapper = userSummaryResourceMapper;
-        this.currentUserAccess = currentUserAccess;
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List all users")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Users found"),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid token"),
-            @ApiResponse(responseCode = "403", description = "Insufficient role")
     })
     public ResponseEntity<List<UserSummaryResource>> getAll() {
         Result<List<UserResult>, UserError> result = userQueryService.getAllUsers(new GetAllUsersQuery());
@@ -78,13 +72,9 @@ public class UserController {
     @Operation(summary = "Get a user by id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User found"),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid token"),
-            @ApiResponse(responseCode = "403", description = "Not the owner and not an administrator"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     public ResponseEntity<UserSummaryResource> getById(@PathVariable("userId") Long userId) {
-        currentUserAccess.requireSelfOrAdmin(userId);
-
         Result<UserResult, UserError> result = userQueryService.getUserById(new GetUserByIdQuery(userId));
 
         return result.fold(
@@ -100,15 +90,11 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User updated"),
             @ApiResponse(responseCode = "400", description = "Validation or domain error"),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid token"),
-            @ApiResponse(responseCode = "403", description = "Not the owner and not an administrator"),
             @ApiResponse(responseCode = "404", description = "User or role not found"),
             @ApiResponse(responseCode = "409", description = "Email already registered")
     })
     public ResponseEntity<UserSummaryResource> update(@PathVariable("userId") Long userId,
                                                       @Valid @RequestBody UpdateUserRequest request) {
-        currentUserAccess.requireSelfOrAdmin(userId);
-
         Result<UserResult, UserError> result = userCommandService.update(
                 new UpdateUserCommand(userId, request.email(), request.password(), request.roleIds())
         );
@@ -125,8 +111,6 @@ public class UserController {
     @Operation(summary = "Delete a user")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "User deleted"),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid token"),
-            @ApiResponse(responseCode = "403", description = "Insufficient role"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     public ResponseEntity<Void> delete(@PathVariable("userId") Long userId) {

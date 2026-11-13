@@ -36,8 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * REST controller for role administration use cases. All routes are restricted to
- * administrators by the global security configuration.
+ * REST controller for role administration use cases.
  */
 @RestController
 @RequestMapping("api/v1/roles")
@@ -60,8 +59,6 @@ public class RoleController {
     @Operation(summary = "List all roles")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Roles found"),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid token"),
-            @ApiResponse(responseCode = "403", description = "Insufficient role")
     })
     public ResponseEntity<List<RoleResource>> getAll() {
         Result<List<RoleResult>, RoleError> result = roleQueryService.getAllRoles(new GetAllRolesQuery());
@@ -78,8 +75,6 @@ public class RoleController {
     @Operation(summary = "Get a role by id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Role found"),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid token"),
-            @ApiResponse(responseCode = "403", description = "Insufficient role"),
             @ApiResponse(responseCode = "404", description = "Role not found")
     })
     public ResponseEntity<RoleResource> getById(@PathVariable("roleId") Long roleId) {
@@ -98,8 +93,6 @@ public class RoleController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Role created"),
             @ApiResponse(responseCode = "400", description = "Validation or domain error"),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid token"),
-            @ApiResponse(responseCode = "403", description = "Insufficient role"),
             @ApiResponse(responseCode = "409", description = "Role name already exists")
     })
     public ResponseEntity<RoleResource> create(@Valid @RequestBody CreateRoleRequest request) {
@@ -121,8 +114,6 @@ public class RoleController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Role updated"),
             @ApiResponse(responseCode = "400", description = "Validation error"),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid token"),
-            @ApiResponse(responseCode = "403", description = "Insufficient role"),
             @ApiResponse(responseCode = "404", description = "Role not found")
     })
     public ResponseEntity<RoleResource> update(@PathVariable("roleId") Long roleId,
@@ -143,8 +134,6 @@ public class RoleController {
     @Operation(summary = "Delete a role")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Role deleted"),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid token"),
-            @ApiResponse(responseCode = "403", description = "Insufficient role"),
             @ApiResponse(responseCode = "404", description = "Role not found"),
             @ApiResponse(responseCode = "409", description = "Role is still assigned to users")
     })
