@@ -25,6 +25,9 @@ public class UserPersistenceEntity extends AuditableAbstractPersistenceEntity {
     @Column(name = "password_hash", nullable = false, columnDefinition = "TEXT")
     private String passwordHash;
 
+    @Column(name = "active", nullable = false)
+    private boolean active = true;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
@@ -55,6 +58,14 @@ public class UserPersistenceEntity extends AuditableAbstractPersistenceEntity {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public Set<RolePersistenceEntity> getRoles() {

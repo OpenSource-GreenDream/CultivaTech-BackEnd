@@ -24,6 +24,7 @@ public class UserMapper {
                 user.email().value(),
                 user.passwordHash().value()
         );
+        entity.setActive(user.isActive());
         entity.setRoles(roles);
         return entity;
     }
@@ -31,6 +32,7 @@ public class UserMapper {
     public void updateEntity(UserPersistenceEntity entity, User user, Set<RolePersistenceEntity> roles) {
         entity.setEmailAddress(user.email().value());
         entity.setPasswordHash(user.passwordHash().value());
+        entity.setActive(user.isActive());
         entity.setRoles(roles);
     }
 
@@ -40,7 +42,7 @@ public class UserMapper {
                 new EmailAddress(entity.getEmailAddress()),
                 new PasswordHash(entity.getPasswordHash()),
                 toRoleIds(entity.getRoles()),
-                true
+                entity.isActive()
         );
     }
 
