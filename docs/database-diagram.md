@@ -63,6 +63,8 @@ package "IAM Context" {
   table(user_roles) {
     * foreign_key(primary_key(user_id)) : INT
     * foreign_key(primary_key(role_id)) : INT
+    --
+    created_at : DATETIME
   }
 }
 
@@ -94,8 +96,8 @@ package "Profile & Field Context" {
   }
 }
 
-' ==================== MONITORING & ANALYTICS CONTEXT ====================
-package "Monitoring & Analytics Context" {
+' ==================== MONITORING CONTEXT ====================
+package "Monitoring Context" {
   table(devices) {
     * primary_key(id) : INT
     --
@@ -117,7 +119,10 @@ package "Monitoring & Analytics Context" {
     recorded_at : DATETIME
     created_at : DATETIME
   }
+}
 
+' ==================== ANALYTICS CONTEXT ====================
+package "Analytics Context" {
   table(reports) {
     * primary_key(id) : INT
     --
@@ -145,8 +150,8 @@ package "Monitoring & Analytics Context" {
   }
 }
 
-' ==================== COMMERCE & INVENTORY CONTEXT ====================
-package "Commerce & Inventory Context" {
+' ==================== CATALOG & ORDERS CONTEXT ====================
+package "Catalog & Orders Context" {
   table(products) {
     * primary_key(id) : INT
     --
@@ -173,7 +178,10 @@ package "Commerce & Inventory Context" {
     created_at : DATETIME
     updated_at : DATETIME
   }
+}
 
+' ==================== INVENTORY CONTEXT ====================
+package "Inventory Context" {
   table(inventories) {
     * primary_key(id) : INT
     --
@@ -249,17 +257,23 @@ users ||--o{ user_roles
 roles ||--o{ user_roles
 users ||--|| profiles
 
-' Profile & Operational Relationships
+' Profile & Field Relationships
 profiles ||--o{ fields
+
+' Monitoring Relationships
 fields ||--o{ devices
 devices ||--o{ sensor_readings
+
+' Analytics Relationships
 devices ||--o{ reports
 devices ||--o{ harvest_projections
 
-' Commerce & Inventory Relationships
+' Catalog & Orders Relationships
 fields |o--o{ products
 profiles ||--o{ orders
 products ||--o{ orders
+
+' Inventory Relationships
 profiles ||--o{ inventories
 fields ||--o{ inventories
 products ||--o{ inventories
