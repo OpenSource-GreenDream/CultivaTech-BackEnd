@@ -8,13 +8,13 @@ import java.util.Set;
  * @param userId  persisted IAM user identity
  * @param email   normalized email address
  * @param roles   assigned role names
- * @param profile temporary application-layer profile payload
+ * @param profile registered profile payload
  */
 public record SignUpResult(
         Long userId,
         String email,
         Set<String> roles,
-        TemporaryProfileResult profile
+        ProfileRegistrationResult profile
 ) {
 
     public SignUpResult {
