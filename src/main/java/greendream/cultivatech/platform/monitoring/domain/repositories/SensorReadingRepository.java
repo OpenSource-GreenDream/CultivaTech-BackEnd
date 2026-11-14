@@ -7,8 +7,7 @@ import greendream.cultivatech.platform.shared.domain.repositories.ICrudService;
 import java.util.List;
 
 /**
- * Domain port for SensorReading persistence.
- * Reuses the shared CRUD contract.
+ * Persistence contract for the sensor reading aggregate.
  */
 public interface SensorReadingRepository extends ICrudService<SensorReading, Long> {
 
