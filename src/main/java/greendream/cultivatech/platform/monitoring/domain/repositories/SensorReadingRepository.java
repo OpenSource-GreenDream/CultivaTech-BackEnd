@@ -12,4 +12,8 @@ import java.util.List;
 public interface SensorReadingRepository extends ICrudService<SensorReading, Long> {
 
     List<SensorReading> findAllByDeviceId(DeviceId deviceId);
+
+    List<SensorReading> findAllByOrderByRecordedAtDesc();
+
+    boolean existsByDeviceId(DeviceId deviceId);
 }
