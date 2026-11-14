@@ -155,6 +155,7 @@ package "Catalog & Orders Context" {
   table(products) {
     * primary_key(id) : INT
     --
+    foreign_key(inventory_id) : INT UNIQUE
     foreign_key(field_id) : INT (NULL)
     name : VARCHAR(255)
     description : VARCHAR(1000)
@@ -187,7 +188,6 @@ package "Inventory Context" {
     --
     foreign_key(profile_id) : INT
     foreign_key(field_id) : INT
-    foreign_key(product_id) : INT
     stock_quantity : INT
     created_at : DATETIME
     updated_at : DATETIME
@@ -276,7 +276,7 @@ products ||--o{ orders
 ' Inventory Relationships
 profiles ||--o{ inventories
 fields ||--o{ inventories
-products ||--o{ inventories
+inventories ||--o| products
 
 ' Notifications Relationships
 profiles ||--o{ notifications
