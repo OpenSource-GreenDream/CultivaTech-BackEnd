@@ -1,22 +1,32 @@
-
 package greendream.cultivatech.platform.monitoring.domain.model.aggregates;
 
+import greendream.cultivatech.platform.monitoring.domain.model.valueobjects.DeviceId;
 import greendream.cultivatech.platform.shared.domain.aggregates.AbstractDomainAggregateRoot;
+import lombok.Getter;
 
 import java.util.Date;
 
+/**
+ * Sensor reading aggregate root.
+ * Represents a measurement taken by an IoT device installed on a field.
+ */
 public class SensorReading extends AbstractDomainAggregateRoot<SensorReading> {
 
+    @Getter
     private Long id;
-    private final Long deviceId;
+    @Getter
+    private final DeviceId deviceId;
+    @Getter
     private final String parameter;
+    @Getter
     private final Double value;
+    @Getter
     private final String unit;
     private final Date recordedAt;
     private Date createdAt;
 
     /** Represents a sensor reading. */
-    public SensorReading(Long deviceId, String parameter,
+    public SensorReading(DeviceId deviceId, String parameter,
                          Double value, String unit, Date recordedAt) {
 
         if (deviceId == null)
@@ -43,7 +53,7 @@ public class SensorReading extends AbstractDomainAggregateRoot<SensorReading> {
 
     public static SensorReading restore(
             Long id,
-            Long deviceId,
+            DeviceId deviceId,
             String parameter,
             Double value,
             String unit,
@@ -60,12 +70,6 @@ public class SensorReading extends AbstractDomainAggregateRoot<SensorReading> {
 
         return reading;
     }
-
-    public Long getId() { return id; }
-    public Long getDeviceId() { return deviceId; }
-    public String getParameter() { return parameter; }
-    public Double getValue() { return value; }
-    public String getUnit() { return unit; }
 
     public Date getRecordedAt() {
         return new Date(recordedAt.getTime());
