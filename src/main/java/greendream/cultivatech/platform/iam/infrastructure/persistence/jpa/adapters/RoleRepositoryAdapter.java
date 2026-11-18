@@ -10,6 +10,7 @@ import greendream.cultivatech.platform.iam.infrastructure.persistence.jpa.reposi
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,6 +62,16 @@ public class RoleRepositoryAdapter implements RoleRepository {
     @Override
     public boolean existsByName(RoleName name) {
         return roleJpaRepository.existsByName(name.value());
+    }
+
+    @Override
+    public List<Role> findAllById(Collection<RoleId> roleIds) {
+        List<Long> ids = roleIds.stream()
+                .map(RoleId::value)
+                .toList();
+        return roleJpaRepository.findAllById(ids).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
     @Override

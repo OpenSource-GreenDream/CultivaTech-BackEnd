@@ -1,11 +1,16 @@
 package greendream.cultivatech.platform.iam.application.internal.commandservices;
 
 import greendream.cultivatech.platform.iam.application.commands.ProfileRegistrationCommand;
+import greendream.cultivatech.platform.iam.application.commands.SignInCommand;
 import greendream.cultivatech.platform.iam.application.commands.SignUpCommand;
 import greendream.cultivatech.platform.iam.application.commandservices.AuthenticationCommandService;
+import greendream.cultivatech.platform.iam.application.ports.AccessTokenIssuer;
 import greendream.cultivatech.platform.iam.application.ports.ProfileRegistration;
+import greendream.cultivatech.platform.iam.application.results.IssuedAccessToken;
 import greendream.cultivatech.platform.iam.application.results.ProfileRegistrationError;
 import greendream.cultivatech.platform.iam.application.results.ProfileRegistrationResult;
+import greendream.cultivatech.platform.iam.application.results.SignInError;
+import greendream.cultivatech.platform.iam.application.results.SignInResult;
 import greendream.cultivatech.platform.iam.application.results.SignUpError;
 import greendream.cultivatech.platform.iam.application.results.SignUpResult;
 import greendream.cultivatech.platform.iam.domain.model.aggregates.Role;
@@ -37,20 +42,27 @@ public class AuthenticationCommandServiceImpl implements AuthenticationCommandSe
     private static final String DEFAULT_CONTACT_PHONE = "+51000000000";
     private static final double DEFAULT_MOISTURE_THRESHOLD = 0.0;
     private static final double DEFAULT_TEMPERATURE_THRESHOLD = 0.0;
+    private static final String INVALID_CREDENTIALS = "error.authentication.invalid-credentials";
+    private static final String BEARER_TOKEN_TYPE = "Bearer";
+    private static final PasswordHash DUMMY_PASSWORD_HASH = new PasswordHash(
+            "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy");
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordHashing passwordHashing;
     private final ProfileRegistration profileRegistration;
+    private final AccessTokenIssuer accessTokenIssuer;
 
     public AuthenticationCommandServiceImpl(UserRepository userRepository,
                                             RoleRepository roleRepository,
                                             PasswordHashing passwordHashing,
-                                            ProfileRegistration profileRegistration) {
+                                            ProfileRegistration profileRegistration,
+                                            AccessTokenIssuer accessTokenIssuer) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordHashing = passwordHashing;
         this.profileRegistration = profileRegistration;
+        this.accessTokenIssuer = accessTokenIssuer;
     }
 
     @Override
@@ -111,6 +123,50 @@ public class AuthenticationCommandServiceImpl implements AuthenticationCommandSe
                 savedUser.email().value(),
                 Set.of(defaultRole.name().value()),
                 profileResult.success().orElseThrow()
+        ));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Result<SignInResult, SignInError> signIn(SignInCommand command) {
+        if (command == null) {
+            return Result.failure(new SignInError("error.command.required"));
+        }
+
+        Result<EmailAddress, SignUpError> emailResult = parseEmail(command.email());
+        if (emailResult.isFailure()) {
+            return Result.failure(new SignInError(INVALID_CREDENTIALS));
+        }
+        EmailAddress email = emailResult.success().orElseThrow();
+
+        String password = command.password();
+        if (password == null || password.isBlank()) {
+            return Result.failure(new SignInError(INVALID_CREDENTIALS));
+        }
+
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            // Perform a dummy comparison to reduce timing differences between an
+            // unknown email and an incorrect password.
+            passwordHashing.matches(password, DUMMY_PASSWORD_HASH);
+            return Result.failure(new SignInError(INVALID_CREDENTIALS));
+        }
+
+        boolean credentialsMatch = passwordHashing.matches(password, user.passwordHash());
+        if (!credentialsMatch || !user.isActive()) {
+            return Result.failure(new SignInError(INVALID_CREDENTIALS));
+        }
+
+        Long userId = user.id().map(UserId::value).orElse(null);
+        if (userId == null) {
+            return Result.failure(new SignInError(INVALID_CREDENTIALS));
+        }
+
+        IssuedAccessToken issuedAccessToken = accessTokenIssuer.issue(new UserId(userId));
+        return Result.success(new SignInResult(
+                issuedAccessToken.accessToken(),
+                BEARER_TOKEN_TYPE,
+                issuedAccessToken.expiresInSeconds()
         ));
     }
 
