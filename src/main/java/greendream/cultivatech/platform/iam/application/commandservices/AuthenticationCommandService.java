@@ -1,6 +1,9 @@
 package greendream.cultivatech.platform.iam.application.commandservices;
 
+import greendream.cultivatech.platform.iam.application.commands.SignInCommand;
 import greendream.cultivatech.platform.iam.application.commands.SignUpCommand;
+import greendream.cultivatech.platform.iam.application.results.SignInError;
+import greendream.cultivatech.platform.iam.application.results.SignInResult;
 import greendream.cultivatech.platform.iam.application.results.SignUpError;
 import greendream.cultivatech.platform.iam.application.results.SignUpResult;
 import greendream.cultivatech.platform.shared.application.result.Result;
@@ -17,4 +20,12 @@ public interface AuthenticationCommandService {
      * @return successful sign-up result or an application error
      */
     Result<SignUpResult, SignUpError> signUp(SignUpCommand command);
+
+    /**
+     * Authenticates a user and issues a bearer access token.
+     *
+     * @param command sign-in command
+     * @return issued access token or a generic authentication error
+     */
+    Result<SignInResult, SignInError> signIn(SignInCommand command);
 }

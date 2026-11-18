@@ -1,19 +1,26 @@
 package greendream.cultivatech.platform.iam.interfaces.rest.controllers;
 
+import greendream.cultivatech.platform.iam.application.commands.SignInCommand;
 import greendream.cultivatech.platform.iam.application.commands.SignUpCommand;
 import greendream.cultivatech.platform.iam.application.commandservices.AuthenticationCommandService;
+import greendream.cultivatech.platform.iam.application.results.SignInError;
+import greendream.cultivatech.platform.iam.application.results.SignInResult;
 import greendream.cultivatech.platform.iam.application.results.SignUpError;
 import greendream.cultivatech.platform.iam.application.results.SignUpResult;
+import greendream.cultivatech.platform.iam.interfaces.rest.resources.SignInRequest;
+import greendream.cultivatech.platform.iam.interfaces.rest.resources.SignInResponse;
 import greendream.cultivatech.platform.iam.interfaces.rest.resources.SignUpRequest;
 import greendream.cultivatech.platform.iam.interfaces.rest.resources.UserResource;
 import greendream.cultivatech.platform.iam.interfaces.rest.transform.UserResourceMapper;
 import greendream.cultivatech.platform.shared.application.result.Result;
 import greendream.cultivatech.platform.shared.domain.exceptions.ConflictException;
+import greendream.cultivatech.platform.shared.domain.exceptions.UnauthorizedException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +66,32 @@ public class AuthenticationController {
                         throw new ConflictException(error.messageKey());
                     }
                     throw new IllegalArgumentException(error.messageKey());
+                }
+        );
+    }
+
+    @PostMapping(value = "/sign-in", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Authenticate a user and issue a bearer access token")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Authentication successful"),
+            @ApiResponse(responseCode = "400", description = "Malformed request"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials, inactive user or missing account")
+    })
+    public ResponseEntity<SignInResponse> signIn(@Valid @RequestBody SignInRequest request) {
+        Result<SignInResult, SignInError> result = authenticationCommandService.signIn(
+                new SignInCommand(request.email(), request.password())
+        );
+
+        return result.fold(
+                success -> ResponseEntity.ok()
+                        .cacheControl(CacheControl.noStore())
+                        .body(new SignInResponse(
+                                success.accessToken(),
+                                success.tokenType(),
+                                success.expiresIn()
+                        )),
+                error -> {
+                    throw new UnauthorizedException(error.messageKey());
                 }
         );
     }
