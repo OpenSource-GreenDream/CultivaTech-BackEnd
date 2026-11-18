@@ -2,10 +2,14 @@ package greendream.cultivatech.platform.shared.interfaces.rest;
 
 import greendream.cultivatech.platform.shared.domain.exceptions.ConflictException;
 import greendream.cultivatech.platform.shared.domain.exceptions.NotFoundException;
+import greendream.cultivatech.platform.shared.domain.exceptions.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -118,6 +122,32 @@ public class GlobalExceptionHandler {
                 HttpStatusCode.valueOf(HttpStatus.NOT_FOUND.value()),
                 message
         );
+    }
+
+    /**
+     * Handles {@link UnauthorizedException} produced by authentication use cases.
+     *
+     * @param exception The {@link UnauthorizedException} exception to handle
+     * @param locale    The {@link Locale} locale to use for error messages
+     * @return The {@link ProblemDetail} error response with a Bearer challenge
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    ResponseEntity<ProblemDetail> handleException(UnauthorizedException exception, Locale locale) {
+        String messageKey = exception.getMessage() != null
+                ? exception.getMessage()
+                : "error.authentication.unauthorized";
+        String message = Objects.requireNonNullElse(
+                messageSource.getMessage(messageKey, null, messageKey, locale),
+                messageKey
+        );
+        log.warn("Unauthorized: {}", message);
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, message);
+        problemDetail.setTitle(HttpStatus.UNAUTHORIZED.getReasonPhrase());
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer")
+                .body(problemDetail);
     }
 
 }
