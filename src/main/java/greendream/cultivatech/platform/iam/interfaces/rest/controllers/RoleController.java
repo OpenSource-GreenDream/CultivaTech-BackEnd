@@ -19,6 +19,7 @@ import greendream.cultivatech.platform.shared.domain.exceptions.NotFoundExceptio
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -57,8 +58,11 @@ public class RoleController {
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List all roles")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Roles found"),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid token"),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions")
     })
     public ResponseEntity<List<RoleResource>> getAll() {
         Result<List<RoleResult>, RoleError> result = roleQueryService.getAllRoles(new GetAllRolesQuery());
@@ -73,8 +77,11 @@ public class RoleController {
 
     @GetMapping(value = "/{roleId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a role by id")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Role found"),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid token"),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions"),
             @ApiResponse(responseCode = "404", description = "Role not found")
     })
     public ResponseEntity<RoleResource> getById(@PathVariable("roleId") Long roleId) {
