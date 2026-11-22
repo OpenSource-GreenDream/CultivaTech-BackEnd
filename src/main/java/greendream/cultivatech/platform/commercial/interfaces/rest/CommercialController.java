@@ -24,11 +24,11 @@ public class CommercialController {
     @GetMapping("/products/{id}") public Product product(@PathVariable Long id) { return commercial.getProduct(id); }
     @PostMapping(value="/products", consumes=MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(commercial.createProduct(request.inventoryId(), request.fieldId(), request.name(), request.description(), request.price(), request.imageUrl()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(commercial.createProduct(request.inventoryId(), request.fieldId(), request.name(), request.description(), request.price(), request.type(), request.imageUrl()));
     }
     @PutMapping(value="/products/{id}", consumes=MediaType.APPLICATION_JSON_VALUE)
     public Product updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
-        return commercial.updateProduct(id, request.inventoryId(), request.fieldId(), request.name(), request.description(), request.price(), request.imageUrl());
+        return commercial.updateProduct(id, request.inventoryId(), request.fieldId(), request.name(), request.description(), request.price(), request.type(), request.imageUrl());
     }
     @DeleteMapping("/products/{id}") public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         commercial.deleteProduct(id); return ResponseEntity.noContent().build();
@@ -47,6 +47,7 @@ public class CommercialController {
     public record ProductRequest(@NotNull @Positive Long inventoryId, @Positive Long fieldId,
                                  @NotBlank @Size(max=255) String name, @Size(max=1000) String description,
                                  @NotNull @DecimalMin("0.00") @Digits(integer=16, fraction=2) BigDecimal price,
+                                 @NotBlank @Size(max=50) String type,
                                  @Size(max=500) String imageUrl) { }
     public record OrderRequest(@NotNull @Positive Long profileId, @NotNull @Positive Long productId,
                                @Positive int quantity, @PositiveOrZero int paymentMethod, Boolean subscription) { }
