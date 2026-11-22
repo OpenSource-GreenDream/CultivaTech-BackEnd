@@ -27,16 +27,16 @@ public class CommercialService {
     @Transactional(readOnly = true)
     public Product getProduct(Long id) { return products.findById(id).orElseThrow(() -> new IllegalArgumentException("Product not found")); }
 
-    public Product createProduct(Long inventoryId, Long fieldId, String name, String description, BigDecimal price, String imageUrl) {
+    public Product createProduct(Long inventoryId, Long fieldId, String name, String description, BigDecimal price, String type, String imageUrl) {
         if (products.findByInventoryId(inventoryId).isPresent()) throw new IllegalArgumentException("A product already exists for this inventory");
-        return products.save(new Product(null, inventoryId, fieldId, name, description, price, imageUrl));
+        return products.save(new Product(null, inventoryId, fieldId, name, description, price, type, imageUrl));
     }
 
-    public Product updateProduct(Long id, Long inventoryId, Long fieldId, String name, String description, BigDecimal price, String imageUrl) {
+    public Product updateProduct(Long id, Long inventoryId, Long fieldId, String name, String description, BigDecimal price, String type, String imageUrl) {
         getProduct(id);
         products.findByInventoryId(inventoryId).filter(existing -> !existing.id().equals(id))
                 .ifPresent(existing -> { throw new IllegalArgumentException("A product already exists for this inventory"); });
-        return products.save(new Product(id, inventoryId, fieldId, name, description, price, imageUrl));
+        return products.save(new Product(id, inventoryId, fieldId, name, description, price, type, imageUrl));
     }
 
     public void deleteProduct(Long id) { getProduct(id); products.deleteById(id); }
