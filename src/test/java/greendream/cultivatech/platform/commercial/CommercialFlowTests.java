@@ -23,11 +23,12 @@ class CommercialFlowTests {
         String product = mvc.perform(post("/api/v1/products")
                         .contentType("application/json")
                         .content("""
-                                {"inventoryId":991,"fieldId":null,"name":"Organic compost","description":"One bag","price":12.50,"imageUrl":"https://example.test/compost.png"}
+                                {"inventoryId":991,"fieldId":null,"name":"Organic compost","description":"One bag","price":12.50,"type":"fertilizer","imageUrl":"https://example.test/compost.png"}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.name").value("Organic compost"))
+                .andExpect(jsonPath("$.type").value("fertilizer"))
                 .andReturn().getResponse().getContentAsString();
         long productId = com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
                 .readTree(product).get("id").asLong();
