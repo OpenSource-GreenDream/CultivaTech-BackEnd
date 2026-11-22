@@ -1,8 +1,8 @@
 package greendream.cultivatech.platform.commercial.interfaces.rest;
 
 import greendream.cultivatech.platform.commercial.application.CommercialService;
-import greendream.cultivatech.platform.commercial.infrastructure.persistence.jpa.entities.OrderEntity;
-import greendream.cultivatech.platform.commercial.infrastructure.persistence.jpa.entities.ProductEntity;
+import greendream.cultivatech.platform.commercial.domain.model.aggregates.Order;
+import greendream.cultivatech.platform.commercial.domain.model.aggregates.Product;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -20,27 +20,27 @@ public class CommercialController {
     private final CommercialService commercial;
     public CommercialController(CommercialService commercial) { this.commercial = commercial; }
 
-    @GetMapping("/products") public List<ProductEntity> products() { return commercial.getProducts(); }
-    @GetMapping("/products/{id}") public ProductEntity product(@PathVariable Long id) { return commercial.getProduct(id); }
+    @GetMapping("/products") public List<Product> products() { return commercial.getProducts(); }
+    @GetMapping("/products/{id}") public Product product(@PathVariable Long id) { return commercial.getProduct(id); }
     @PostMapping(value="/products", consumes=MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ProductEntity> createProduct(@Valid @RequestBody ProductRequest request) {
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(commercial.createProduct(request.inventoryId(), request.fieldId(), request.name(), request.description(), request.price(), request.imageUrl()));
     }
     @PutMapping(value="/products/{id}", consumes=MediaType.APPLICATION_JSON_VALUE)
-    public ProductEntity updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
+    public Product updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
         return commercial.updateProduct(id, request.inventoryId(), request.fieldId(), request.name(), request.description(), request.price(), request.imageUrl());
     }
     @DeleteMapping("/products/{id}") public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         commercial.deleteProduct(id); return ResponseEntity.noContent().build();
     }
-    @GetMapping("/orders") public List<OrderEntity> orders(@RequestParam(required=false) Long profileId) { return commercial.getOrders(profileId); }
-    @GetMapping("/orders/{id}") public OrderEntity order(@PathVariable Long id) { return commercial.getOrder(id); }
+    @GetMapping("/orders") public List<Order> orders(@RequestParam(required=false) Long profileId) { return commercial.getOrders(profileId); }
+    @GetMapping("/orders/{id}") public Order order(@PathVariable Long id) { return commercial.getOrder(id); }
     @PostMapping(value="/orders", consumes=MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<OrderEntity> createOrder(@Valid @RequestBody OrderRequest request) {
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(commercial.createOrder(request.profileId(), request.productId(), request.quantity(), request.paymentMethod(), Boolean.TRUE.equals(request.subscription())));
     }
     @PatchMapping(value="/orders/{id}/status", consumes=MediaType.APPLICATION_JSON_VALUE)
-    public OrderEntity updateOrderStatus(@PathVariable Long id, @Valid @RequestBody OrderStatusRequest request) {
+    public Order updateOrderStatus(@PathVariable Long id, @Valid @RequestBody OrderStatusRequest request) {
         return commercial.updateOrderStatus(id, request.status());
     }
 
