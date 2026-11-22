@@ -17,5 +17,6 @@ public class ProductEntity extends AuditableAbstractPersistenceEntity {
     @Column(nullable=false, length=255) private String name;
     @Column(length=1000) private String description;
     @Column(nullable=false, precision=18, scale=2) private BigDecimal price;
+    @Column(nullable=false, length=50) private String type;
     @Column(name="image_url", length=500) private String imageUrl;
 }
