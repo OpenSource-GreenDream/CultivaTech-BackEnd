@@ -21,12 +21,13 @@ public class ProductRepositoryAdapter implements ProductRepository {
         ProductEntity entity = product.id() == null ? new ProductEntity() : jpa.findById(product.id()).orElseGet(ProductEntity::new);
         entity.setInventoryId(product.inventoryId()); entity.setFieldId(product.fieldId()); entity.setName(product.name());
         entity.setDescription(product.description()); entity.setPrice(product.price()); entity.setImageUrl(product.imageUrl());
+        entity.setType(product.type());
         return toDomain(jpa.save(entity));
     }
     @Override public void deleteById(Long id) { jpa.deleteById(id); }
 
     private Product toDomain(ProductEntity entity) {
         return new Product(entity.getId(), entity.getInventoryId(), entity.getFieldId(), entity.getName(),
-                entity.getDescription(), entity.getPrice(), entity.getImageUrl());
+                entity.getDescription(), entity.getPrice(), entity.getType(), entity.getImageUrl());
     }
 }
