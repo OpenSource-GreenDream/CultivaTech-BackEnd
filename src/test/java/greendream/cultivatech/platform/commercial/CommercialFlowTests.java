@@ -20,6 +20,11 @@ class CommercialFlowTests {
 
     @Test
     void catalogProductCanBeOrderedAndOrderStatusUpdated() throws Exception {
+        mvc.perform(get("/api/v1/products"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
+        mvc.perform(get("/api/v1/products/{id}", 999999))
+                .andExpect(status().isNotFound());
+
         String product = mvc.perform(post("/api/v1/products")
                         .contentType("application/json")
                         .content("""
