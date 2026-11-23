@@ -4,6 +4,8 @@ import greendream.cultivatech.platform.commercial.domain.model.aggregates.Order;
 import greendream.cultivatech.platform.commercial.domain.model.aggregates.Product;
 import greendream.cultivatech.platform.commercial.domain.repositories.OrderRepository;
 import greendream.cultivatech.platform.commercial.domain.repositories.ProductRepository;
+import greendream.cultivatech.platform.shared.domain.exceptions.ConflictException;
+import greendream.cultivatech.platform.shared.domain.exceptions.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -25,17 +27,17 @@ public class CommercialService {
     public List<Product> getProducts() { return products.findAll(); }
 
     @Transactional(readOnly = true)
-    public Product getProduct(Long id) { return products.findById(id).orElseThrow(() -> new IllegalArgumentException("Product not found")); }
+    public Product getProduct(Long id) { return products.findById(id).orElseThrow(() -> new NotFoundException("errors.not-found")); }
 
     public Product createProduct(Long inventoryId, Long fieldId, String name, String description, BigDecimal price, String type, String imageUrl) {
-        if (products.findByInventoryId(inventoryId).isPresent()) throw new IllegalArgumentException("A product already exists for this inventory");
+        if (products.findByInventoryId(inventoryId).isPresent()) throw new ConflictException("errors.conflict");
         return products.save(new Product(null, inventoryId, fieldId, name, description, price, type, imageUrl));
     }
 
     public Product updateProduct(Long id, Long inventoryId, Long fieldId, String name, String description, BigDecimal price, String type, String imageUrl) {
         getProduct(id);
         products.findByInventoryId(inventoryId).filter(existing -> !existing.id().equals(id))
-                .ifPresent(existing -> { throw new IllegalArgumentException("A product already exists for this inventory"); });
+                .ifPresent(existing -> { throw new ConflictException("errors.conflict"); });
         return products.save(new Product(id, inventoryId, fieldId, name, description, price, type, imageUrl));
     }
 
@@ -49,7 +51,7 @@ public class CommercialService {
     }
 
     @Transactional(readOnly = true)
-    public Order getOrder(Long id) { return orders.findById(id).orElseThrow(() -> new IllegalArgumentException("Order not found")); }
+    public Order getOrder(Long id) { return orders.findById(id).orElseThrow(() -> new NotFoundException("errors.not-found")); }
 
     public Order createOrder(Long profileId, Long productId, int quantity, int paymentMethod, boolean subscription) {
         Product product = getProduct(productId);
