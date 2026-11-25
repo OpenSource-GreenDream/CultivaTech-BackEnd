@@ -4,6 +4,7 @@ import greendream.cultivatech.platform.inventory.domain.model.valueobjects.Field
 import greendream.cultivatech.platform.inventory.domain.model.valueobjects.InventoryId;
 import greendream.cultivatech.platform.inventory.domain.model.valueobjects.ProfileId;
 import greendream.cultivatech.platform.inventory.domain.model.valueobjects.StockQuantity;
+import greendream.cultivatech.platform.shared.domain.exceptions.ConflictException;
 import greendream.cultivatech.platform.shared.domain.aggregates.AbstractDomainAggregateRoot;
 
 import java.util.Objects;
@@ -93,5 +94,22 @@ public final class Inventory extends AbstractDomainAggregateRoot<Inventory> {
 
     public void changeStockQuantity(StockQuantity newStockQuantity) {
         this.stockQuantity = Objects.requireNonNull(newStockQuantity, "stockQuantity must not be null");
+    }
+
+    public void decreaseStockQuantity(int amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("error.inventory.stock-quantity.invalid");
+        }
+        if (stockQuantity.value() < amount) {
+            throw new ConflictException("error.inventory.insufficient-stock");
+        }
+        this.stockQuantity = new StockQuantity(stockQuantity.value() - amount);
+    }
+
+    public void increaseStockQuantity(int amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("error.inventory.stock-quantity.invalid");
+        }
+        this.stockQuantity = new StockQuantity(stockQuantity.value() + amount);
     }
 }
