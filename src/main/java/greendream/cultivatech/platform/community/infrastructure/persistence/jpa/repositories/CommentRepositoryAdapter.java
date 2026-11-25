@@ -17,12 +17,15 @@ public class CommentRepositoryAdapter implements CommentRepository {
     @Override public List<Comment> findByTargetProfileId(Long id) { return jpa.findAllByTargetProfileId(id).stream().map(this::toDomain).toList(); }
     @Override public List<Comment> findByFieldId(Long id) { return jpa.findAllByFieldId(id).stream().map(this::toDomain).toList(); }
     @Override public List<Comment> findByProductId(Long id) { return jpa.findAllByProductId(id).stream().map(this::toDomain).toList(); }
-    @Override public Comment save(Comment c) { return toDomain(jpa.save(toEntity(c))); }
+    @Override public Double findAverageRatingByTargetProfileIdAndTargetType(Long targetProfileId, String targetType) {
+        return jpa.findAverageRatingByTargetProfileIdAndTargetType(targetProfileId, targetType);
+    }
+    @Override public Comment save(Comment c) { return toDomain(jpa.saveAndFlush(toEntity(c))); }
     @Override public Comment update(Comment c) {
         CommentEntity e = jpa.findById(c.getId()).orElseThrow(); e.setContent(c.getContent()); e.setRating(c.getRating());
-        return toDomain(jpa.save(e));
+        return toDomain(jpa.saveAndFlush(e));
     }
-    @Override public void deleteById(Long id) { jpa.deleteById(id); }
+    @Override public void deleteById(Long id) { jpa.deleteById(id); jpa.flush(); }
     @Override public void deleteAll() { jpa.deleteAll(); }
     private CommentEntity toEntity(Comment c) {
         CommentEntity e = new CommentEntity(); e.setAuthorProfileId(c.getAuthorProfileId()); e.setTargetType(c.getTargetType());
