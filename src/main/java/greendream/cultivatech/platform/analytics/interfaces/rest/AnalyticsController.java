@@ -9,6 +9,7 @@ import greendream.cultivatech.platform.analytics.application.results.AnalyticsRe
 import greendream.cultivatech.platform.analytics.domain.model.aggregates.HarvestProjection;
 import greendream.cultivatech.platform.analytics.domain.model.aggregates.HarvestRecord;
 import greendream.cultivatech.platform.shared.domain.exceptions.NotFoundException;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 
 @RestController @RequestMapping("/api/v1")
+@Tag(name = "Analytics")
 public class AnalyticsController {
     private final AnalyticsCommandService commands; private final AnalyticsQueryService queries;
     public AnalyticsController(AnalyticsCommandService commands,AnalyticsQueryService queries){this.commands=commands;this.queries=queries;}
