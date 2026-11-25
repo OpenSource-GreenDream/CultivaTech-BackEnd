@@ -13,7 +13,7 @@ import lombok.Setter;
 public class CommentEntity extends AuditableAbstractPersistenceEntity {
     @Column(name = "author_profile_id", nullable = false) private Long authorProfileId;
     @Column(name = "target_type", nullable = false, length = 20) private String targetType;
-    @Column(name = "target_profile_id") private Long targetProfileId;
+    @Column(name = "target_profile_id", nullable = false) private Long targetProfileId;
     @Column(name = "field_id") private Long fieldId;
     @Column(name = "product_id") private Long productId;
     @Column(name = "content", nullable = false, length = 1000) private String content;

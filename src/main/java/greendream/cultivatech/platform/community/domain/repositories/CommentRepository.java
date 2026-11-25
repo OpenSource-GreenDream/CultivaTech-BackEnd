@@ -9,4 +9,6 @@ public interface CommentRepository extends ICrudService<Comment, Long> {
     List<Comment> findByTargetProfileId(Long profileId);
     List<Comment> findByFieldId(Long fieldId);
     List<Comment> findByProductId(Long productId);
+
+    Double findAverageRatingByTargetProfileIdAndTargetType(Long targetProfileId, String targetType);
 }

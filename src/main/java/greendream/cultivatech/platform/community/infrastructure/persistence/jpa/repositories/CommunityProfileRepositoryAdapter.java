@@ -20,7 +20,7 @@ public class CommunityProfileRepositoryAdapter implements CommunityProfileReposi
         CommunityProfileEntity entity = jpa.findById(p.getId()).orElseThrow();
         entity.setNickname(p.getNickname()); entity.setReputationScore(p.getReputationScore());
         entity.setPublicBio(p.getPublicBio()); entity.setVisibilityStatus(p.getVisibilityStatus());
-        return toDomain(jpa.save(entity));
+        return toDomain(jpa.saveAndFlush(entity));
     }
     @Override public void deleteById(Long id) { jpa.deleteById(id); }
     @Override public void deleteAll() { jpa.deleteAll(); }

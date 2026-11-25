@@ -1,9 +1,15 @@
 package greendream.cultivatech.platform.community.domain.model.aggregates;
 
 import greendream.cultivatech.platform.shared.domain.aggregates.AbstractDomainAggregateRoot;
+
 import java.util.Date;
+import java.util.Objects;
+import java.util.Set;
 
 public class Comment extends AbstractDomainAggregateRoot<Comment> {
+    private static final Set<String> VALID_TARGET_TYPES = Set.of("PROFILE", "FIELD", "PRODUCT");
+    private static final int MAX_CONTENT_LENGTH = 1000;
+
     private Long id;
     private final Long authorProfileId;
     private final String targetType;
@@ -15,18 +21,33 @@ public class Comment extends AbstractDomainAggregateRoot<Comment> {
     private Date createdAt;
     private Date updatedAt;
 
-    public Comment(Long authorProfileId, String targetType, Long targetProfileId, Long fieldId,
-                   Long productId, String content, int rating) {
-        if (authorProfileId == null || authorProfileId <= 0) throw new IllegalArgumentException("error.community.author-profile-id.invalid");
-        if (targetProfileId == null || targetProfileId <= 0) throw new IllegalArgumentException("error.community.target-profile-id.invalid");
-        this.targetType = targetType == null ? "PROFILE" : targetType.trim().toUpperCase();
-        if (!this.targetType.equals("PROFILE") && !this.targetType.equals("FIELD") && !this.targetType.equals("PRODUCT"))
+    public Comment(Long authorProfileId,
+                   String targetType,
+                   Long targetProfileId,
+                   Long fieldId,
+                   Long productId,
+                   String content,
+                   int rating) {
+        if (authorProfileId == null || authorProfileId <= 0) {
+            throw new IllegalArgumentException("error.community.author-profile-id.invalid");
+        }
+        String normalizedType = targetType == null ? null : targetType.trim().toUpperCase();
+        if (normalizedType == null || !VALID_TARGET_TYPES.contains(normalizedType)) {
             throw new IllegalArgumentException("error.community.target-type.invalid");
-        if ((this.targetType.equals("FIELD") && fieldId == null) || (this.targetType.equals("PRODUCT") && productId == null))
-            throw new IllegalArgumentException("error.community.target-id.required");
-        if (content == null || content.isBlank() || content.length() > 1000) throw new IllegalArgumentException("error.community.comment.invalid");
-        if (rating < 1 || rating > 5) throw new IllegalArgumentException("error.community.rating.invalid");
+        }
+        if (targetProfileId == null || targetProfileId <= 0) {
+            throw new IllegalArgumentException("error.community.target-profile-id.invalid");
+        }
+        if (content == null || content.isBlank() || content.length() > MAX_CONTENT_LENGTH) {
+            throw new IllegalArgumentException("error.community.comment.invalid");
+        }
+        if (rating < 1 || rating > 5) {
+            throw new IllegalArgumentException("error.community.rating.invalid");
+        }
+        validateConditionalTargets(normalizedType, fieldId, productId);
+
         this.authorProfileId = authorProfileId;
+        this.targetType = normalizedType;
         this.targetProfileId = targetProfileId;
         this.fieldId = fieldId;
         this.productId = productId;
@@ -34,8 +55,17 @@ public class Comment extends AbstractDomainAggregateRoot<Comment> {
         this.rating = rating;
     }
 
-    public static Comment restore(Long id, Long author, String type, Long target, Long field, Long product, String content, int rating, Date createdAt, Date updatedAt) {
-        Comment comment = new Comment(author, type, target, field, product, content, rating);
+    public static Comment restore(Long id,
+                                 Long authorProfileId,
+                                 String targetType,
+                                 Long targetProfileId,
+                                 Long fieldId,
+                                 Long productId,
+                                 String content,
+                                 int rating,
+                                 Date createdAt,
+                                 Date updatedAt) {
+        Comment comment = new Comment(authorProfileId, targetType, targetProfileId, fieldId, productId, content, rating);
         comment.id = id;
         comment.createdAt = createdAt;
         comment.updatedAt = updatedAt;
@@ -43,10 +73,35 @@ public class Comment extends AbstractDomainAggregateRoot<Comment> {
     }
 
     public void update(String content, int rating) {
-        if (content == null || content.isBlank() || content.length() > 1000) throw new IllegalArgumentException("error.community.comment.invalid");
-        if (rating < 1 || rating > 5) throw new IllegalArgumentException("error.community.rating.invalid");
+        if (content == null || content.isBlank() || content.length() > MAX_CONTENT_LENGTH) {
+            throw new IllegalArgumentException("error.community.comment.invalid");
+        }
+        if (rating < 1 || rating > 5) {
+            throw new IllegalArgumentException("error.community.rating.invalid");
+        }
         this.content = content.trim();
         this.rating = rating;
+    }
+
+    private static void validateConditionalTargets(String targetType, Long fieldId, Long productId) {
+        switch (targetType) {
+            case "PROFILE" -> {
+                if (fieldId != null || productId != null) {
+                    throw new IllegalArgumentException("error.community.target-inconsistent");
+                }
+            }
+            case "FIELD" -> {
+                if (fieldId == null || fieldId <= 0 || productId != null) {
+                    throw new IllegalArgumentException("error.community.target-inconsistent");
+                }
+            }
+            case "PRODUCT" -> {
+                if (productId == null || productId <= 0 || fieldId != null) {
+                    throw new IllegalArgumentException("error.community.target-inconsistent");
+                }
+            }
+            default -> throw new IllegalArgumentException("error.community.target-type.invalid");
+        }
     }
 
     public Long getId() { return id; }

@@ -1,6 +1,7 @@
 package greendream.cultivatech.platform.shared.interfaces.rest;
 
 import greendream.cultivatech.platform.shared.domain.exceptions.ConflictException;
+import greendream.cultivatech.platform.shared.domain.exceptions.ForbiddenException;
 import greendream.cultivatech.platform.shared.domain.exceptions.NotFoundException;
 import greendream.cultivatech.platform.shared.domain.exceptions.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
@@ -131,6 +132,18 @@ public class GlobalExceptionHandler {
      * @param locale    The {@link Locale} locale to use for error messages
      * @return The {@link ProblemDetail} error response with a Bearer challenge
      */
+    @ExceptionHandler(ForbiddenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    ErrorResponse handleException(ForbiddenException exception, Locale locale) {
+        String messageKey = exception.getMessage() != null ? exception.getMessage() : "error.forbidden";
+        String message = Objects.requireNonNullElse(
+                messageSource.getMessage(messageKey, null, messageKey, locale),
+                messageKey
+        );
+        log.warn("Forbidden: {}", message);
+        return ErrorResponse.create(exception, HttpStatusCode.valueOf(HttpStatus.FORBIDDEN.value()), message);
+    }
+
     @ExceptionHandler(UnauthorizedException.class)
     ResponseEntity<ProblemDetail> handleException(UnauthorizedException exception, Locale locale) {
         String messageKey = exception.getMessage() != null
