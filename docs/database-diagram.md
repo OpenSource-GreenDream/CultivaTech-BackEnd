@@ -210,16 +210,6 @@ package "Notifications Context" {
     updated_at : DATETIME
   }
 
-  table(notification_preferences) {
-    * primary_key(id) : INT
-    --
-    foreign_key(profile_id) : INT
-    foreign_key(field_id) : INT (NULL)
-    type : VARCHAR(40)
-    enabled : BOOLEAN
-    created_at : DATETIME
-    updated_at : DATETIME
-  }
 }
 
 ' ==================== COMMUNITY & REPUTATION CONTEXT ====================
@@ -229,7 +219,7 @@ package "Community & Reputation Context" {
     --
     foreign_key(profile_id) : INT UNIQUE
     nickname : VARCHAR(100)
-    reputation_score : INT
+    reputation_score : DECIMAL(3,2)
     public_bio : VARCHAR(500)
     visibility_status : INT
     created_at : DATETIME
@@ -241,7 +231,7 @@ package "Community & Reputation Context" {
     --
     foreign_key(author_profile_id) : INT
     target_type : VARCHAR(20)
-    foreign_key(target_profile_id) : INT (NULL)
+    foreign_key(target_profile_id) : INT
     foreign_key(field_id) : INT (NULL)
     foreign_key(product_id) : INT (NULL)
     content : VARCHAR(1000)
@@ -281,8 +271,7 @@ inventories ||--o| products
 ' Notifications Relationships
 profiles ||--o{ notifications
 fields |o--o{ notifications
-profiles ||--o{ notification_preferences
-fields |o--o{ notification_preferences
+
 
 ' Community Relationships
 profiles ||--|| community_profiles
