@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import greendream.cultivatech.platform.community.application.services.CommunityService;
 import greendream.cultivatech.platform.community.domain.model.aggregates.Comment;
 import greendream.cultivatech.platform.community.domain.model.aggregates.CommunityProfile;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,11 +13,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "Communities")
 public class CommunityController {
     private final CommunityService service;
     public CommunityController(CommunityService service) { this.service = service; }
@@ -64,7 +67,7 @@ public class CommunityController {
             @NotBlank @Size(max=1000) String content, @NotNull Integer rating) { }
     public record UpdateCommentRequest(@NotBlank @Size(max=1000) String content, @NotNull Integer rating) { }
     public record ProfileResource(Long id, @JsonProperty("profile_id") Long profileId, String nickname,
-            @JsonProperty("reputation_score") int reputationScore, @JsonProperty("public_bio") String publicBio,
+            @JsonProperty("reputation_score") BigDecimal reputationScore, @JsonProperty("public_bio") String publicBio,
             @JsonProperty("visibility_status") int visibilityStatus,
             @JsonProperty("created_at") Date createdAt, @JsonProperty("updated_at") Date updatedAt) {
         static ProfileResource from(CommunityProfile p) { return new ProfileResource(p.getId(), p.getProfileId(), p.getNickname(), p.getReputationScore(), p.getPublicBio(), p.getVisibilityStatus(), p.getCreatedAt(), p.getUpdatedAt()); }

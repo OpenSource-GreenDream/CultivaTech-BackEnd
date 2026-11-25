@@ -10,4 +10,5 @@ public interface OrderRepository {
     List<Order> findAllByProfileId(Long profileId);
     Optional<Order> findById(Long id);
     Order save(Order order);
+    boolean existsByProductId(Long productId);
 }

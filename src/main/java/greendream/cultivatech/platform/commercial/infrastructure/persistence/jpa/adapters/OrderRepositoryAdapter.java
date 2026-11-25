@@ -17,6 +17,7 @@ public class OrderRepositoryAdapter implements OrderRepository {
     @Override public List<Order> findAll() { return jpa.findAll().stream().map(this::toDomain).toList(); }
     @Override public List<Order> findAllByProfileId(Long id) { return jpa.findAllByProfileIdOrderByCreatedAtDesc(id).stream().map(this::toDomain).toList(); }
     @Override public Optional<Order> findById(Long id) { return jpa.findById(id).map(this::toDomain); }
+    @Override public boolean existsByProductId(Long productId) { return jpa.existsByProductId(productId); }
     @Override public Order save(Order order) {
         OrderEntity entity = order.id() == null ? new OrderEntity() : jpa.findById(order.id()).orElseGet(OrderEntity::new);
         entity.setProfileId(order.profileId()); entity.setProductId(order.productId()); entity.setProductName(order.productName());

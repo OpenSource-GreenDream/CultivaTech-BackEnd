@@ -16,6 +16,7 @@ import greendream.cultivatech.platform.inventory.interfaces.rest.resources.Regis
 import greendream.cultivatech.platform.inventory.interfaces.rest.resources.UpdateInventoryRequest;
 import greendream.cultivatech.platform.inventory.interfaces.rest.transform.InventoryResourceMapper;
 import greendream.cultivatech.platform.shared.application.result.Result;
+import greendream.cultivatech.platform.shared.domain.exceptions.ConflictException;
 import greendream.cultivatech.platform.shared.domain.exceptions.NotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -196,8 +197,10 @@ public class InventoryController {
 
     private RuntimeException toException(InventoryError error) {
         return switch (error.messageKey()) {
-            case "error.inventory.not-found", "error.profile.not-found" ->
+            case "error.inventory.not-found", "error.profile.not-found", "error.field.not-found" ->
                     new NotFoundException(error.messageKey());
+            case "error.inventory.in-use", "error.inventory.field.conflict", "error.field.not-owned" ->
+                    new ConflictException(error.messageKey());
             default -> new IllegalArgumentException(error.messageKey());
         };
     }
