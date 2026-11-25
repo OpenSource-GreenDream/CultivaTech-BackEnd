@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface OrderJpaRepository extends JpaRepository<OrderEntity, Long> {
     List<OrderEntity> findAllByProfileIdOrderByCreatedAtDesc(Long profileId);
+    boolean existsByProductId(Long productId);
 }
