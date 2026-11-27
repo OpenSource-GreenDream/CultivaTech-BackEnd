@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of AuthenticationCommandService.
@@ -88,14 +89,27 @@ public class AuthenticationCommandServiceImpl implements AuthenticationCommandSe
             return Result.failure(new SignUpError("error.user.email.already-exists"));
         }
 
-        Role defaultRole = roleRepository.findByName(DEFAULT_ROLE_NAME).orElse(null);
-        if (defaultRole == null || defaultRole.id().isEmpty()) {
+        String requestedRoleName = (command.role() == null || command.role().isBlank())
+                ? DEFAULT_ROLE_NAME.value()
+                : command.role().trim().toUpperCase();
+
+        if ("ADMIN".equals(requestedRoleName)) {
+            return Result.failure(new SignUpError("error.role.not-available-for-registration"));
+        }
+        if (!"FARMER".equals(requestedRoleName)
+                && !"CUSTOMER".equals(requestedRoleName)
+                && !"SUPPLIER".equals(requestedRoleName)) {
+            return Result.failure(new SignUpError("error.role.not-available-for-registration"));
+        }
+
+        Role selectedRole = roleRepository.findByName(new RoleName(requestedRoleName)).orElse(null);
+        if (selectedRole == null || selectedRole.id().isEmpty()) {
             return Result.failure(new SignUpError("error.role.default-not-found"));
         }
 
         PasswordHash passwordHash = passwordHashing.hash(plainPassword);
         User user = User.register(email, passwordHash);
-        user.assignRole(defaultRole.id()
+        user.assignRole(selectedRole.id()
                 .orElseThrow(() -> new IllegalStateException("error.role.id.not-assigned")));
 
         User savedUser = userRepository.save(user);
@@ -121,7 +135,7 @@ public class AuthenticationCommandServiceImpl implements AuthenticationCommandSe
         return Result.success(new SignUpResult(
                 userId,
                 savedUser.email().value(),
-                Set.of(defaultRole.name().value()),
+                Set.of(selectedRole.name().value()),
                 profileResult.success().orElseThrow()
         ));
     }
@@ -162,11 +176,19 @@ public class AuthenticationCommandServiceImpl implements AuthenticationCommandSe
             return Result.failure(new SignInError(INVALID_CREDENTIALS));
         }
 
+        Set<String> roleNames = roleRepository.findAllById(user.roleIds()).stream()
+                .map(Role::name)
+                .map(RoleName::value)
+                .collect(Collectors.toSet());
+
         IssuedAccessToken issuedAccessToken = accessTokenIssuer.issue(new UserId(userId));
         return Result.success(new SignInResult(
                 issuedAccessToken.accessToken(),
                 BEARER_TOKEN_TYPE,
-                issuedAccessToken.expiresInSeconds()
+                issuedAccessToken.expiresInSeconds(),
+                userId,
+                user.email().value(),
+                roleNames
         ));
     }
 

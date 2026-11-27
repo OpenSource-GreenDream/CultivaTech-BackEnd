@@ -18,7 +18,9 @@ public class RoleSeeder implements ApplicationRunner {
 
     private static final List<RoleSeed> SEEDS = List.of(
             new RoleSeed("ADMIN", "Platform administrator"),
-            new RoleSeed("FARMER", "Default farmer role")
+            new RoleSeed("FARMER", "Agricultural producer"),
+            new RoleSeed("CUSTOMER", "B2B agricultural customer"),
+            new RoleSeed("SUPPLIER", "Agricultural supplies provider")
     );
 
     private final RoleRepository roleRepository;

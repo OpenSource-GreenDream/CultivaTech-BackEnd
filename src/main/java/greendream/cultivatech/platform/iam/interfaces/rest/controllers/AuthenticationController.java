@@ -9,6 +9,7 @@ import greendream.cultivatech.platform.iam.application.results.SignUpError;
 import greendream.cultivatech.platform.iam.application.results.SignUpResult;
 import greendream.cultivatech.platform.iam.interfaces.rest.resources.SignInRequest;
 import greendream.cultivatech.platform.iam.interfaces.rest.resources.SignInResponse;
+import greendream.cultivatech.platform.iam.interfaces.rest.resources.UserSummaryResource;
 import greendream.cultivatech.platform.iam.interfaces.rest.resources.SignUpRequest;
 import greendream.cultivatech.platform.iam.interfaces.rest.resources.UserResource;
 import greendream.cultivatech.platform.iam.interfaces.rest.transform.UserResourceMapper;
@@ -55,7 +56,7 @@ public class AuthenticationController {
     })
     public ResponseEntity<UserResource> signUp(@Valid @RequestBody SignUpRequest request) {
         Result<SignUpResult, SignUpError> result = authenticationCommandService.signUp(
-                new SignUpCommand(request.email(), request.password())
+                new SignUpCommand(request.email(), request.password(), request.role())
         );
 
         return result.fold(
@@ -88,7 +89,13 @@ public class AuthenticationController {
                         .body(new SignInResponse(
                                 success.accessToken(),
                                 success.tokenType(),
-                                success.expiresIn()
+                                success.expiresIn(),
+                                new UserSummaryResource(
+                                        success.userId(),
+                                        success.email(),
+                                        success.roles(),
+                                        true
+                                )
                         )),
                 error -> {
                     throw new UnauthorizedException(error.messageKey());
