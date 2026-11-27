@@ -6,10 +6,16 @@ import greendream.cultivatech.platform.monitoring.application.commandservices.Se
 import greendream.cultivatech.platform.monitoring.application.results.SensorReadingError;
 import greendream.cultivatech.platform.monitoring.application.results.SensorReadingResult;
 import greendream.cultivatech.platform.monitoring.domain.model.aggregates.SensorReading;
+import greendream.cultivatech.platform.monitoring.domain.model.enums.SensorParameter;
 import greendream.cultivatech.platform.monitoring.domain.model.valueobjects.DeviceId;
 import greendream.cultivatech.platform.monitoring.domain.repositories.DeviceRepository;
 import greendream.cultivatech.platform.monitoring.domain.repositories.SensorReadingRepository;
 import greendream.cultivatech.platform.shared.application.result.Result;
+import greendream.cultivatech.platform.shared.domain.exceptions.InvalidSensorParameterException;
+import greendream.cultivatech.platform.shared.domain.exceptions.InvalidSensorTimestampException;
+import greendream.cultivatech.platform.shared.domain.exceptions.InvalidSensorUnitException;
+import greendream.cultivatech.platform.shared.domain.exceptions.InvalidSensorValueException;
+import greendream.cultivatech.platform.shared.domain.exceptions.RequiredSensorPropertyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,6 +62,9 @@ public class SensorReadingCommandServiceImpl implements SensorReadingCommandServ
             );
 
             return Result.success(toResult(sensorReadingRepository.save(reading)));
+        } catch (InvalidSensorParameterException | InvalidSensorUnitException | InvalidSensorValueException
+                 | RequiredSensorPropertyException | InvalidSensorTimestampException exception) {
+            throw exception;
         } catch (IllegalArgumentException exception) {
             return Result.failure(new SensorReadingError(exception.getMessage()));
         }

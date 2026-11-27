@@ -48,6 +48,15 @@ public class CommercialService {
     @Transactional(readOnly = true)
     public Product getProduct(Long id) { return products.findById(id).orElseThrow(() -> new NotFoundException("errors.not-found")); }
 
+    @Transactional(readOnly = true)
+    public Profile getProductProducerProfile(Long productId) {
+        Product product = getProduct(productId);
+        Inventory inventory = inventories.findById(new InventoryId(product.inventoryId()))
+                .orElseThrow(() -> new NotFoundException("errors.not-found"));
+        return profiles.findById(new ProfileId(inventory.profileId().value()))
+                .orElseThrow(() -> new NotFoundException("errors.not-found"));
+    }
+
     public Product createProduct(Long inventoryId, Long fieldId, String name, String description, BigDecimal price, String type, String imageUrl) {
         if (inventoryId == null || inventoryId <= 0) {
             throw new IllegalArgumentException("error.product.inventory.required");

@@ -1,15 +1,16 @@
 package greendream.cultivatech.platform.monitoring.domain.model.aggregates;
 
+import greendream.cultivatech.platform.monitoring.domain.model.enums.SensorParameter;
+import greendream.cultivatech.platform.shared.domain.exceptions.InvalidSensorUnitException;
+import greendream.cultivatech.platform.shared.domain.exceptions.InvalidSensorTimestampException;
+import greendream.cultivatech.platform.shared.domain.exceptions.InvalidSensorValueException;
+import greendream.cultivatech.platform.shared.domain.exceptions.RequiredSensorPropertyException;
 import greendream.cultivatech.platform.monitoring.domain.model.valueobjects.DeviceId;
 import greendream.cultivatech.platform.shared.domain.aggregates.AbstractDomainAggregateRoot;
 import lombok.Getter;
 
 import java.util.Date;
 
-/**
- * Sensor reading aggregate root.
- * Represents a measurement taken by an IoT device installed on a field.
- */
 public class SensorReading extends AbstractDomainAggregateRoot<SensorReading> {
 
     @Getter
@@ -17,7 +18,7 @@ public class SensorReading extends AbstractDomainAggregateRoot<SensorReading> {
     @Getter
     private final DeviceId deviceId;
     @Getter
-    private final String parameter;
+    private final SensorParameter parameter;
     @Getter
     private final Double value;
     @Getter
@@ -25,27 +26,43 @@ public class SensorReading extends AbstractDomainAggregateRoot<SensorReading> {
     private final Date recordedAt;
     private Date createdAt;
 
-    /** Represents a sensor reading. */
-    public SensorReading(DeviceId deviceId, String parameter,
+    public SensorReading(DeviceId deviceId, SensorParameter parameter,
                          Double value, String unit, Date recordedAt) {
 
         if (deviceId == null)
             throw new IllegalArgumentException("error.sensor.device-id.required");
 
-        if (parameter == null || parameter.isBlank())
-            throw new IllegalArgumentException("error.sensor.parameter.required");
+        if (parameter == null)
+            throw new RequiredSensorPropertyException("REQUIRED_SENSOR_PARAMETER", "parameter");
 
-        if (value == null || !Double.isFinite(value))
-            throw new IllegalArgumentException("error.sensor.value.invalid");
+        if (value == null)
+            throw new RequiredSensorPropertyException("REQUIRED_SENSOR_VALUE", "value");
+
+        if (!Double.isFinite(value))
+            throw new InvalidSensorValueException(parameter.name(), value, null, null);
 
         if (unit == null || unit.isBlank())
-            throw new IllegalArgumentException("error.sensor.unit.required");
+            throw new RequiredSensorPropertyException("REQUIRED_SENSOR_UNIT", "unit");
+
+        if (!parameter.isCompatibleUnit(unit.trim()))
+            throw new InvalidSensorUnitException(parameter.name(), unit.trim(), parameter.getCanonicalUnit());
+
+        if (!parameter.isValidValue(value)) {
+            Double min = 0.0;
+            Double max = null;
+            if (parameter == SensorParameter.MOISTURE) {
+                max = 100.0;
+            } else if (parameter == SensorParameter.PH) {
+                max = 14.0;
+            }
+            throw new InvalidSensorValueException(parameter.name(), value, min, max);
+        }
 
         if (recordedAt == null)
-            throw new IllegalArgumentException("error.sensor.recorded-at.required");
+            throw new InvalidSensorTimestampException();
 
         this.deviceId = deviceId;
-        this.parameter = parameter.trim();
+        this.parameter = parameter;
         this.value = value;
         this.unit = unit.trim();
         this.recordedAt = new Date(recordedAt.getTime());
@@ -54,7 +71,7 @@ public class SensorReading extends AbstractDomainAggregateRoot<SensorReading> {
     public static SensorReading restore(
             Long id,
             DeviceId deviceId,
-            String parameter,
+            SensorParameter parameter,
             Double value,
             String unit,
             Date recordedAt,

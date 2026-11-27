@@ -5,6 +5,7 @@ package greendream.cultivatech.platform.iam.application.commands;
  *
  * @param email    raw email address supplied by the caller
  * @param password raw password supplied by the caller
+ * @param role     requested role name; blank means the default farmer role
  */
-public record SignUpCommand(String email, String password) {
+public record SignUpCommand(String email, String password, String role) {
 }

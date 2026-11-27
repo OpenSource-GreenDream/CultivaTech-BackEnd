@@ -3,6 +3,7 @@ package greendream.cultivatech.platform.commercial.interfaces.rest;
 import greendream.cultivatech.platform.commercial.application.CommercialService;
 import greendream.cultivatech.platform.commercial.domain.model.aggregates.Order;
 import greendream.cultivatech.platform.commercial.domain.model.aggregates.Product;
+import greendream.cultivatech.platform.profile.domain.model.aggregates.Profile;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -22,6 +23,12 @@ public class CommercialController {
 
     @GetMapping("/products") public List<Product> products() { return commercial.getProducts(); }
     @GetMapping("/products/{id}") public Product product(@PathVariable Long id) { return commercial.getProduct(id); }
+    @GetMapping("/products/{id}/producer")
+    public ProducerResource producer(@PathVariable Long id) {
+        Profile profile = commercial.getProductProducerProfile(id);
+        Long profileId = profile.id().orElseThrow(() -> new greendream.cultivatech.platform.shared.domain.exceptions.NotFoundException("errors.not-found")).value();
+        return new ProducerResource(profileId, profile.fundoName().value(), profile.contactPhone().value());
+    }
     @PostMapping(value="/products", consumes=MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(commercial.createProduct(request.inventoryId(), request.fieldId(), request.name(), request.description(), request.price(), request.type(), request.imageUrl()));
@@ -52,4 +59,5 @@ public class CommercialController {
     public record OrderRequest(@NotNull @Positive Long profileId, @NotNull @Positive Long productId,
                                @Positive int quantity, @PositiveOrZero int paymentMethod, Boolean subscription) { }
     public record OrderStatusRequest(@PositiveOrZero int status) { }
+    public record ProducerResource(Long profileId, String fundoName, String contactPhone) { }
 }

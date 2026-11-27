@@ -16,6 +16,12 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.Customizer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 import java.time.Clock;
 
@@ -36,6 +42,37 @@ public class WebSecurityConfiguration {
     private static final String ADMIN_ROLE = "ADMIN";
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:4200"
+        ));
+
+        configuration.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "OPTIONS"
+        ));
+
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept"
+        ));
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
+
+    @Bean
     public Clock clock() {
         return Clock.systemUTC();
     }
@@ -52,6 +89,7 @@ public class WebSecurityConfiguration {
                 new BearerAuthorizationRequestFilter(jwtTokenService, iamUserDetailsService);
 
         http
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -67,6 +105,10 @@ public class WebSecurityConfiguration {
                                 "/api/v1/authentication/sign-up",
                                 "/api/v1/authentication/sign-in")
                         .permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/roles",
+                                "/api/v1/roles/*")
+                        .permitAll()
                         // Swagger UI and OpenAPI resources.
                         .requestMatchers(
                                 "/v3/api-docs/**",
@@ -80,7 +122,7 @@ public class WebSecurityConfiguration {
                         // The single wildcard intentionally matches one path segment only,
                         // so /api/v1/users/{userId}/profile from the Profile context keeps
                         // its previous behaviour.
-                        .requestMatchers(HttpMethod.GET, "/api/v1/roles", "/api/v1/roles/*")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/roles", "/api/v1/roles/*")
                         .hasRole(ADMIN_ROLE)
                         .requestMatchers(HttpMethod.GET, "/api/v1/users", "/api/v1/users/*")
                         .hasRole(ADMIN_ROLE)

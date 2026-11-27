@@ -18,4 +18,5 @@ public class CommunityProfileEntity extends AuditableAbstractPersistenceEntity {
     @Column(name = "reputation_score", nullable = false, precision = 3, scale = 2) private BigDecimal reputationScore;
     @Column(name = "public_bio", length = 500) private String publicBio;
     @Column(name = "visibility_status", nullable = false) private Integer visibilityStatus;
+    @Column(name = "image_url", length = 2048) private String imageUrl;
 }
