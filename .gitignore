@@ -5,6 +5,8 @@ target/
 !**/src/test/**/target/
 
 ### STS ###
+.env
+compose.yaml
 .apt_generated
 .classpath
 .factorypath
