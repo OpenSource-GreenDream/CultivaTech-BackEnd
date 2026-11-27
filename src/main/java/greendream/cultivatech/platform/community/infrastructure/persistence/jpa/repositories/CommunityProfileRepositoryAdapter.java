@@ -20,6 +20,7 @@ public class CommunityProfileRepositoryAdapter implements CommunityProfileReposi
         CommunityProfileEntity entity = jpa.findById(p.getId()).orElseThrow();
         entity.setNickname(p.getNickname()); entity.setReputationScore(p.getReputationScore());
         entity.setPublicBio(p.getPublicBio()); entity.setVisibilityStatus(p.getVisibilityStatus());
+        entity.setImageUrl(p.getImageUrl());
         return toDomain(jpa.saveAndFlush(entity));
     }
     @Override public void deleteById(Long id) { jpa.deleteById(id); }
@@ -27,9 +28,9 @@ public class CommunityProfileRepositoryAdapter implements CommunityProfileReposi
     private CommunityProfileEntity toEntity(CommunityProfile p) {
         CommunityProfileEntity e = new CommunityProfileEntity(); e.setProfileId(p.getProfileId());
         e.setNickname(p.getNickname()); e.setReputationScore(p.getReputationScore());
-        e.setPublicBio(p.getPublicBio()); e.setVisibilityStatus(p.getVisibilityStatus()); return e;
+        e.setPublicBio(p.getPublicBio()); e.setVisibilityStatus(p.getVisibilityStatus()); e.setImageUrl(p.getImageUrl()); return e;
     }
     private CommunityProfile toDomain(CommunityProfileEntity e) {
-        return CommunityProfile.restore(e.getId(), e.getProfileId(), e.getNickname(), e.getReputationScore(), e.getPublicBio(), e.getVisibilityStatus(), e.getCreatedAt(), e.getUpdatedAt());
+        return CommunityProfile.restore(e.getId(), e.getProfileId(), e.getNickname(), e.getReputationScore(), e.getPublicBio(), e.getVisibilityStatus(), e.getCreatedAt(), e.getUpdatedAt(), e.getImageUrl());
     }
 }

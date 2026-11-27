@@ -1,9 +1,11 @@
 package greendream.cultivatech.platform.community.interfaces.rest;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import greendream.cultivatech.platform.community.application.services.CommunityService;
 import greendream.cultivatech.platform.community.domain.model.aggregates.Comment;
 import greendream.cultivatech.platform.community.domain.model.aggregates.CommunityProfile;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -31,11 +33,14 @@ public class CommunityController {
     @GetMapping("/api/v1/community-profiles/{id}") public ProfileResource profile(@PathVariable Long id) { return ProfileResource.from(service.findProfile(id)); }
     @PostMapping(value = "/api/v1/community-profiles", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED) public ProfileResource createProfile(@Valid @RequestBody ProfileRequest r) {
-        return ProfileResource.from(service.createProfile(r.profileId(), r.nickname(), r.reputationScore(), r.publicBio(), r.visibilityStatus()));
+        return ProfileResource.from(service.createProfile(r.getProfileId(), r.getNickname(), r.getReputationScore(), r.getPublicBio(), r.getVisibilityStatus(), r.getImageUrl()));
     }
     @PutMapping(value = "/api/v1/community-profiles/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ProfileResource updateProfile(@PathVariable Long id, @Valid @RequestBody ProfileRequest r) {
-        return ProfileResource.from(service.updateProfile(id, r.nickname(), r.reputationScore(), r.publicBio(), r.visibilityStatus()));
+        if (r.isImageUrlProvided()) {
+            return ProfileResource.from(service.updateProfile(id, r.getNickname(), r.getReputationScore(), r.getPublicBio(), r.getVisibilityStatus(), r.getImageUrl()));
+        }
+        return ProfileResource.from(service.updateProfile(id, r.getNickname(), r.getReputationScore(), r.getPublicBio(), r.getVisibilityStatus()));
     }
     @DeleteMapping("/api/v1/community-profiles/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteProfile(@PathVariable Long id) { service.deleteProfile(id); }
@@ -58,19 +63,50 @@ public class CommunityController {
     @DeleteMapping("/api/v1/comments/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteComment(@PathVariable Long id) { service.deleteComment(id); }
 
-    public record ProfileRequest(@NotNull @JsonProperty("profile_id") Long profileId, @NotBlank @Size(max=100) String nickname,
-            @JsonProperty("reputation_score") Integer reputationScore, @JsonProperty("public_bio") @Size(max=500) String publicBio,
-            @JsonProperty("visibility_status") Integer visibilityStatus) { }
+    @Schema(name = "CommunityProfileRequest")
+    public static class ProfileRequest {
+        @NotNull @JsonProperty("profile_id") private Long profileId;
+        @NotBlank @Size(max=100) private String nickname;
+        @JsonProperty("reputation_score") private Integer reputationScore;
+        @JsonProperty("public_bio") @Size(max=500) private String publicBio;
+        @JsonProperty("visibility_status") private Integer visibilityStatus;
+        @JsonProperty("image_url") @Size(max=2048) @Schema(types = {"string", "null"}) private String imageUrl;
+        private boolean imageUrlProvided = false;
+
+        public ProfileRequest() { }
+
+        @JsonSetter("image_url")
+        public void setImageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+            this.imageUrlProvided = true;
+        }
+
+        public Long getProfileId() { return profileId; }
+        public void setProfileId(Long profileId) { this.profileId = profileId; }
+        public String getNickname() { return nickname; }
+        public void setNickname(String nickname) { this.nickname = nickname; }
+        public Integer getReputationScore() { return reputationScore; }
+        public void setReputationScore(Integer reputationScore) { this.reputationScore = reputationScore; }
+        public String getPublicBio() { return publicBio; }
+        public void setPublicBio(String publicBio) { this.publicBio = publicBio; }
+        public Integer getVisibilityStatus() { return visibilityStatus; }
+        public void setVisibilityStatus(Integer visibilityStatus) { this.visibilityStatus = visibilityStatus; }
+        public String getImageUrl() { return imageUrl; }
+        @com.fasterxml.jackson.annotation.JsonIgnore
+        public boolean isImageUrlProvided() { return imageUrlProvided; }
+    }
     public record CommentRequest(@NotNull @JsonProperty("author_profile_id") Long authorProfileId,
             @JsonProperty("target_type") String targetType, @JsonProperty("target_profile_id") Long targetProfileId,
             @JsonProperty("field_id") Long fieldId, @JsonProperty("product_id") Long productId,
             @NotBlank @Size(max=1000) String content, @NotNull Integer rating) { }
     public record UpdateCommentRequest(@NotBlank @Size(max=1000) String content, @NotNull Integer rating) { }
+    @Schema(name = "CommunityProfileResource")
     public record ProfileResource(Long id, @JsonProperty("profile_id") Long profileId, String nickname,
             @JsonProperty("reputation_score") BigDecimal reputationScore, @JsonProperty("public_bio") String publicBio,
             @JsonProperty("visibility_status") int visibilityStatus,
+            @Schema(types = {"string", "null"}) @JsonProperty("image_url") String imageUrl,
             @JsonProperty("created_at") Date createdAt, @JsonProperty("updated_at") Date updatedAt) {
-        static ProfileResource from(CommunityProfile p) { return new ProfileResource(p.getId(), p.getProfileId(), p.getNickname(), p.getReputationScore(), p.getPublicBio(), p.getVisibilityStatus(), p.getCreatedAt(), p.getUpdatedAt()); }
+        static ProfileResource from(CommunityProfile p) { return new ProfileResource(p.getId(), p.getProfileId(), p.getNickname(), p.getReputationScore(), p.getPublicBio(), p.getVisibilityStatus(), p.getImageUrl(), p.getCreatedAt(), p.getUpdatedAt()); }
     }
     public record CommentResource(Long id, @JsonProperty("author_profile_id") Long authorProfileId,
             @JsonProperty("target_type") String targetType, @JsonProperty("target_profile_id") Long targetProfileId,

@@ -58,15 +58,25 @@ public class CommunityService {
     }
 
     public CommunityProfile createProfile(Long profileId, String nickname, Integer reputationScore, String publicBio, Integer visibility) {
+        return createProfile(profileId, nickname, reputationScore, publicBio, visibility, null);
+    }
+
+    public CommunityProfile createProfile(Long profileId, String nickname, Integer reputationScore, String publicBio, Integer visibility, String imageUrl) {
         if (profiles.findByProfileId(profileId).isPresent()) {
             throw new greendream.cultivatech.platform.shared.domain.exceptions.ConflictException("error.community.profile.already-exists");
         }
-        return profiles.save(new CommunityProfile(profileId, nickname, BigDecimal.ZERO, publicBio, visibility == null ? 0 : visibility));
+        return profiles.save(new CommunityProfile(profileId, nickname, BigDecimal.ZERO, publicBio, visibility == null ? 0 : visibility, imageUrl));
     }
 
     public CommunityProfile updateProfile(Long id, String nickname, Integer reputationScore, String publicBio, Integer visibility) {
         CommunityProfile p = findProfile(id);
         p.update(nickname, p.getReputationScore(), publicBio, visibility == null ? p.getVisibilityStatus() : visibility);
+        return profiles.update(p);
+    }
+
+    public CommunityProfile updateProfile(Long id, String nickname, Integer reputationScore, String publicBio, Integer visibility, String imageUrl) {
+        CommunityProfile p = findProfile(id);
+        p.update(nickname, p.getReputationScore(), publicBio, visibility == null ? p.getVisibilityStatus() : visibility, imageUrl);
         return profiles.update(p);
     }
 
