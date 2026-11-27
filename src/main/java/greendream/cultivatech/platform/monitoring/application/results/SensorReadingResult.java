@@ -1,5 +1,6 @@
 package greendream.cultivatech.platform.monitoring.application.results;
 
+import greendream.cultivatech.platform.monitoring.domain.model.enums.SensorParameter;
 import java.util.Date;
 
 /**
@@ -15,7 +16,7 @@ import java.util.Date;
 public record SensorReadingResult(
         Long id,
         Long deviceId,
-        String parameter,
+        SensorParameter parameter,
         double value,
         String unit,
         Date recordedAt
